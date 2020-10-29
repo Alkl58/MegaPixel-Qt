@@ -49,7 +49,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="tab">
     <attribute name="title">
@@ -63,6 +63,19 @@
        <width>761</width>
        <height>311</height>
       </rect>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButtonClearQueue">
+     <property name="geometry">
+      <rect>
+       <x>690</x>
+       <y>0</y>
+       <width>71</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Clear</string>
      </property>
     </widget>
    </widget>
@@ -95,11 +108,6 @@
      <item>
       <property name="text">
        <string>avif</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>webp</string>
       </property>
      </item>
     </widget>
@@ -449,14 +457,19 @@
   <widget class="QLabel" name="labelOutput">
    <property name="geometry">
     <rect>
-     <x>150</x>
+     <x>140</x>
      <y>80</y>
-     <width>501</width>
+     <width>511</width>
      <height>31</height>
     </rect>
    </property>
+   <property name="font">
+    <font>
+     <italic>true</italic>
+    </font>
+   </property>
    <property name="text">
-    <string/>
+    <string>Output: Same as Source</string>
    </property>
   </widget>
   <widget class="QCheckBox" name="checkBoxBatchAdd">
@@ -470,6 +483,48 @@
    </property>
    <property name="text">
     <string>Batch Add Pictures</string>
+   </property>
+  </widget>
+  <widget class="QProgressBar" name="progressBar">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>530</y>
+     <width>771</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="value">
+    <number>0</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="labelParallelWorkers">
+   <property name="geometry">
+    <rect>
+     <x>420</x>
+     <y>20</y>
+     <width>121</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Parallel Workers:</string>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="spinBoxParallelWorkers">
+   <property name="geometry">
+    <rect>
+     <x>550</x>
+     <y>20</y>
+     <width>55</width>
+     <height>36</height>
+    </rect>
+   </property>
+   <property name="minimum">
+    <number>1</number>
+   </property>
+   <property name="maximum">
+    <number>128</number>
    </property>
   </widget>
  </widget>
