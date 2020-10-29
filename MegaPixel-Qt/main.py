@@ -16,6 +16,7 @@ class megapixel(QtWidgets.QMainWindow):
 
     imageOutput = ""
     avifParams = ""
+    webpParams = ""
 
     def __init__(self):
 
@@ -31,7 +32,15 @@ class megapixel(QtWidgets.QMainWindow):
         self.pushButtonClearQueue.clicked.connect(self.ClearQueue)
         self.comboBoxEncoders.currentIndexChanged.connect(self.ToggleUiElems)
         self.checkBoxCustomSettings.stateChanged.connect(self.ToggleCustomSettings)
+        # Avif
         self.checkBoxAvifLossless.stateChanged.connect(self.ToggleAvifLossless)
+        # Webp
+        self.checkBoxWebpQuality.stateChanged.connect(self.ToggleWebpQuality)
+        self.checkBoxWebpSize.stateChanged.connect(self.ToggleWebpSize)
+        self.checkBoxWebpPSNR.stateChanged.connect(self.ToggleWebpPSNR)
+        self.checkBoxWebpLossless.stateChanged.connect(self.ToggleWebpLossless)
+        self.groupBoxAvif.show()
+        self.groupBoxWebp.hide()
         self.show()  # Show the GUI
 
 
@@ -51,94 +60,79 @@ class megapixel(QtWidgets.QMainWindow):
     def ToggleCustomSettings(self):
         # This function disables visually everything when custom settings is toggled
         if self.checkBoxCustomSettings.isChecked() is True:
-            self.spinBoxAvifMinQ.setEnabled(False)
-            self.spinBoxAvifMaxQ.setEnabled(False)
-            self.labelAvifMinQ.setEnabled(False)
-            self.labelAvifMaxQ.setEnabled(False)
-            self.checkBoxAvifLossless.setEnabled(False)
-            self.labelAvifDepth.setEnabled(False)
-            self.comboBoxAvifDepth.setEnabled(False)
-            self.labelAvifColorFormat.setEnabled(False)
-            self.comboBoxAvifColorFormat.setEnabled(False)
-            self.labelAvifRange.setEnabled(False)
-            self.comboBoxAvifRange.setEnabled(False)
-            self.labelAvifTileRows.setEnabled(False)
-            self.spinBoxAvifTileRows.setEnabled(False)
-            self.labelAvifTileColumns.setEnabled(False)
-            self.spinBoxAvifTileCols.setEnabled(False)
-            self.labelAvifThreads.setEnabled(False)
-            self.spinBoxAvifThreads.setEnabled(False)
-            self.labelAvifSpeed.setEnabled(False)
-            self.spinBoxAvifSpeed.setEnabled(False)
-            self.SetAvifParams(True)
-            self.textEditCustomSettings.setText(self.avifParams)
+            self.textEditCustomSettings.setEnabled(True)
+            if self.comboBoxEncoders.currentIndex() == 0:
+                self.SetAvifParams(True)
+                self.textEditCustomSettings.setText(self.avifParams)
+                self.groupBoxAvif.setEnabled(False)
+            elif self.comboBoxEncoders.currentIndex() == 1:
+                self.SetWebpParams(True)
+                self.textEditCustomSettings.setText(self.webpParams)
+                self.groupBoxWebp.setEnabled(False)
         else:
-            if self.checkBoxAvifLossless.isChecked() is False:
-                self.spinBoxAvifMinQ.setEnabled(True)
-                self.spinBoxAvifMaxQ.setEnabled(True)
-                self.labelAvifMinQ.setEnabled(True)
-                self.labelAvifMaxQ.setEnabled(True)
-            self.checkBoxAvifLossless.setEnabled(True)
-            self.labelAvifDepth.setEnabled(True)
-            self.comboBoxAvifDepth.setEnabled(True)
-            self.labelAvifColorFormat.setEnabled(True)
-            self.comboBoxAvifColorFormat.setEnabled(True)
-            self.labelAvifRange.setEnabled(True)
-            self.comboBoxAvifRange.setEnabled(True)
-            self.labelAvifTileRows.setEnabled(True)
-            self.spinBoxAvifTileRows.setEnabled(True)
-            self.labelAvifTileColumns.setEnabled(True)
-            self.spinBoxAvifTileCols.setEnabled(True)
-            self.labelAvifThreads.setEnabled(True)
-            self.spinBoxAvifThreads.setEnabled(True)
-            self.labelAvifSpeed.setEnabled(True)
-            self.spinBoxAvifSpeed.setEnabled(True)
+            self.textEditCustomSettings.setEnabled(False)
+            if self.comboBoxEncoders.currentIndex() == 0:
+                if self.checkBoxAvifLossless.isChecked() is False:
+                    self.spinBoxAvifMinQ.setEnabled(True)
+                    self.spinBoxAvifMaxQ.setEnabled(True)
+                    self.labelAvifMinQ.setEnabled(True)
+                    self.labelAvifMaxQ.setEnabled(True)
+                self.groupBoxAvif.setEnabled(True)
+            elif self.comboBoxEncoders.currentIndex() == 1:
+                self.groupBoxWebp.setEnabled(True)
+
 
     def ToggleUiElems(self):
         if self.comboBoxEncoders.currentIndex() == 0:
-            self.ShowAvifElems()
+            self.groupBoxWebp.hide()
+            self.groupBoxAvif.show()
         elif self.comboBoxEncoders.currentIndex() == 1:
-            self.HideAvifElems()
+            self.groupBoxAvif.hide()
+            self.groupBoxWebp.show()
 
-    def HideAvifElems(self):
-        self.labelAvifMinQ.hide()
-        self.spinBoxAvifMinQ.hide()
-        self.labelAvifMaxQ.hide()
-        self.spinBoxAvifMaxQ.hide()
-        self.labelAvifDepth.hide()
-        self.comboBoxAvifDepth.hide()
-        self.labelAvifColorFormat.hide()
-        self.comboBoxAvifColorFormat.hide()
-        self.labelAvifRange.hide()
-        self.comboBoxAvifRange.hide()
-        self.labelAvifTileRows.hide()
-        self.spinBoxAvifTileRows.hide()
-        self.labelAvifTileColumns.hide()
-        self.spinBoxAvifTileCols.hide()
-        self.labelAvifThreads.hide()
-        self.spinBoxAvifThreads.hide()
-        self.labelAvifSpeed.hide()
-        self.spinBoxAvifSpeed.hide()
+    def ToggleWebpQuality(self):
+        # Toggles Target Size, PSNR and Lossless visually off
+        if self.checkBoxWebpQuality.isChecked() is True:
+            self.checkBoxWebpSize.setChecked(False)
+            self.checkBoxWebpPSNR.setChecked(False)
+            self.checkBoxWebpLossless.setChecked(False)
+            self.spinBoxWebpPSNR.setEnabled(False)
+            self.spinBoxWebpSize.setEnabled(False)
+            self.spinBoxWebpQ.setEnabled(True)
+            self.comboBoxWebpLossless.setEnabled(False)
 
-    def ShowAvifElems(self):
-        self.labelAvifMinQ.show()
-        self.spinBoxAvifMinQ.show()
-        self.labelAvifMaxQ.show()
-        self.spinBoxAvifMaxQ.show()
-        self.labelAvifDepth.show()
-        self.comboBoxAvifDepth.show()
-        self.labelAvifColorFormat.show()
-        self.comboBoxAvifColorFormat.show()
-        self.labelAvifRange.show()
-        self.comboBoxAvifRange.show()
-        self.labelAvifTileRows.show()
-        self.spinBoxAvifTileRows.show()
-        self.labelAvifTileColumns.show()
-        self.spinBoxAvifTileCols.show()
-        self.labelAvifThreads.show()
-        self.spinBoxAvifThreads.show()
-        self.labelAvifSpeed.show()
-        self.spinBoxAvifSpeed.show()
+    def ToggleWebpSize(self):
+        # Toggles Quality, PSNR and Lossless visually off
+        if self.checkBoxWebpSize.isChecked() is True:
+            self.checkBoxWebpQuality.setChecked(False)
+            self.checkBoxWebpPSNR.setChecked(False)
+            self.checkBoxWebpLossless.setChecked(False)
+            self.spinBoxWebpPSNR.setEnabled(False)
+            self.spinBoxWebpSize.setEnabled(True)
+            self.spinBoxWebpQ.setEnabled(False)
+            self.comboBoxWebpLossless.setEnabled(False)
+
+    def ToggleWebpPSNR(self):
+        # Toggles Quality, Target Size and Lossless visually off
+        if self.checkBoxWebpPSNR.isChecked() is True:
+            self.checkBoxWebpQuality.setChecked(False)
+            self.checkBoxWebpSize.setChecked(False)
+            self.checkBoxWebpLossless.setChecked(False)
+            self.spinBoxWebpPSNR.setEnabled(True)
+            self.spinBoxWebpSize.setEnabled(False)
+            self.spinBoxWebpQ.setEnabled(False)
+            self.comboBoxWebpLossless.setEnabled(False)
+
+    def ToggleWebpLossless(self):
+        # Toggles Quality, Target Size and PSNR visually off
+        if self.checkBoxWebpLossless.isChecked() is True:
+            self.checkBoxWebpQuality.setChecked(False)
+            self.checkBoxWebpSize.setChecked(False)
+            self.checkBoxWebpPSNR.setChecked(False)
+            self.spinBoxWebpPSNR.setEnabled(False)
+            self.spinBoxWebpSize.setEnabled(False)
+            self.spinBoxWebpQ.setEnabled(False)
+            self.comboBoxWebpLossless.setEnabled(True)
 
     def OpenImageSource(self):
         if self.checkBoxBatchAdd.isChecked() is True:
@@ -168,6 +162,7 @@ class megapixel(QtWidgets.QMainWindow):
 
     def StartEncoding(self):
         self.SetAvifParams(False)
+        self.SetWebpParams(False)
         asyncio.run(self.Encode())
 
     def SetAvifParams(self, custom):
@@ -185,15 +180,40 @@ class megapixel(QtWidgets.QMainWindow):
         else:
             self.avifParams = self.textEditCustomSettings.toPlainText()
 
+    def SetWebpParams(self, custom):
+        if self.checkBoxCustomSettings.isChecked is False or custom is True:
+            self.webpParams = " -preset " + self.comboBoxWebpPreset.currentText()
+            if self.checkBoxAvifLossless.isChecked() is False:
+                if self.checkBoxWebpPSNR.isChecked() is True:
+                    self.webpParams += " -psnr " + str(self.spinBoxWebpPSNR.value())
+                if self.checkBoxWebpSize.isChecked() is True:
+                    self.webpParams += " -size " + str(self.spinBoxWebpSize.value() * 1000)
+                if self.checkBoxWebpQuality.isChecked() is True:
+                    self.webpParams += " -q " + str(self.spinBoxWebpQ.value())
+                self.webpParams += " -m " + str(self.comboBoxWebpSpeed.currentIndex())
+                self.webpParams += " -segments " + str(self.spinBoxWebpSegments.value())
+                self.webpParams += " -sns " + str(self.spinBoxWebNoiseShaping.value())
+                self.webpParams += " -f " + str(self.spinBoxWebFilterStrength.value())
+                self.webpParams += " -sharpness " + str(self.spinBoxWebpFilterSharpness.value())
+                if self.checkBoxWebpMultiThreading.isChecked() is True:
+                    self.webpParams += " -mt "
+            else:
+                self.webpParams += " -z " + str(self.comboBoxWebpLossless.currentIndex())
+
 
     async def Encode(self):
         commands = [ ]
         for i in range(self.listWidgetQueue.count()):
             imageInput = self.listWidgetQueue.item(i).text()
             imgOutput = os.path.join(self.imageOutput, os.path.splitext(os.path.splitext(os.path.basename(imageInput))[0])[0])
-            print(imgOutput)
-            avifCMD = "avifenc " + self.avifParams + " \"" + imageInput + "\" " + " \"" + imgOutput + ".avif" + "\""
-            commands.append(avifCMD)
+            if self.comboBoxEncoders.currentIndex() == 0:
+                avifCMD = "avifenc " + self.avifParams + " \"" + imageInput + "\" " + " \"" + imgOutput + ".avif\""
+                commands.append(avifCMD)
+                print(avifCMD)
+            elif self.comboBoxEncoders.currentIndex() == 1:
+                webpCMD = "cwebp " + self.webpParams + " \"" + imageInput + "\" " + " -o \"" + imgOutput + ".webp\""
+                commands.append(webpCMD)
+                print(webpCMD)
 
         self.progressBar.setMaximum(len(commands))  # Sets the Max Value of Progressbar
         pool = Pool(self.spinBoxParallelWorkers.value())  # Sets the amount of workers
