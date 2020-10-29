@@ -1,16 +1,15 @@
 # This Python file uses the following encoding: utf-8
-# from PySide2.QtWidgets import QApplication, QWidget
-# from PySide2.QtCore import QFile, QUrl
-# from PyQt5.QtWidgets import QFileDialog
-# from PySide2.QtUiTools import QUiLoader
-# from subprocess import Popen
 
 from PyQt5 import QtWidgets, uic
-from PyQt5.QtWidgets import QFileDialog
-import io
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
+from multiprocessing.dummy import Pool
+from functools import partial
+from subprocess import call
 import os
 import sys
+import time
 import subprocess
+import asyncio
 
 
 class megapixel(QtWidgets.QMainWindow):
@@ -29,9 +28,9 @@ class megapixel(QtWidgets.QMainWindow):
         self.pushButtonStart.clicked.connect(self.StartEncoding)
         self.pushButtonOpenSource.clicked.connect(self.OpenImageSource)
         self.pushButtonSaveTo.clicked.connect(self.SetDestination)
+        self.pushButtonClearQueue.clicked.connect(self.ClearQueue)
         self.comboBoxEncoders.currentIndexChanged.connect(self.ToggleUiElems)
         self.show()  # Show the GUI
-
 
     def ToggleUiElems(self):
         if self.comboBoxEncoders.currentIndex() == 0:
@@ -80,7 +79,7 @@ class megapixel(QtWidgets.QMainWindow):
         self.spinBoxAvifSpeed.show()
 
     def OpenImageSource(self):
-        if self.checkBoxBatchAdd.isChecked() == True:
+        if self.checkBoxBatchAdd.isChecked() is True:
             imageInputBatch = str(QFileDialog.getExistingDirectory(self, "Select Input Directory"))
             for filename in os.listdir(imageInputBatch):
                 if filename.endswith(".png") or filename.endswith(".jpg") or filename.endswith(".jpeg"):
@@ -93,28 +92,50 @@ class megapixel(QtWidgets.QMainWindow):
         self.imageOutput = str(QFileDialog.getExistingDirectory(self, "Select Output Directory"))
         self.labelOutput.setText("Output: " + self.imageOutput)
 
+    def ClearQueue(self):
+        self.listWidgetQueue.clear()
+
+    def showDialog(self):
+        # Dialog to tell that encoding is finished
+        msgBox = QMessageBox()
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setText("Encoding finished.")
+        msgBox.setWindowTitle("Encoding finished.")
+        msgBox.setStandardButtons(QMessageBox.Ok)
+        msgBox.exec()
 
     def StartEncoding(self):
         self.SetAvifParams()
-        self.Encode()
+        asyncio.run(self.Encode())
 
     def SetAvifParams(self):
         # Sets the params for avif encoding
-        avifParams = " --depth " + self.comboBoxAvifDepth.currentText()
-        avifParams += " --yuv " + self.comboBoxAvifColorFormat.currentText()
-        avifParams += " --range " + self.comboBoxAvifRange.currentText()
-        avifParams += " --min " + str(self.spinBoxAvifMinQ.value()) + " --max " + str(self.spinBoxAvifMaxQ.value())
-        avifParams += " --tilerowslog2 " + str(self.spinBoxAvifTileRows.value()) + " --tilecolslog2 " + str(self.spinBoxAvifTileCols.value())
-        avifParams += " --speed " + str(self.spinBoxAvifSpeed.value()) + " --jobs " + str(self.spinBoxAvifThreads.value())
+        self.avifParams = " --depth " + self.comboBoxAvifDepth.currentText()
+        self.avifParams += " --yuv " + self.comboBoxAvifColorFormat.currentText()
+        self.avifParams += " --range " + self.comboBoxAvifRange.currentText()
+        self.avifParams += " --min " + str(self.spinBoxAvifMinQ.value()) + " --max " + str(self.spinBoxAvifMaxQ.value())
+        self.avifParams += " --tilerowslog2 " + str(self.spinBoxAvifTileRows.value()) + " --tilecolslog2 " + str(self.spinBoxAvifTileCols.value())
+        self.avifParams += " --speed " + str(self.spinBoxAvifSpeed.value()) + " --jobs " + str(self.spinBoxAvifThreads.value())
 
-    def Encode(self):
+    async def Encode(self):
+        commands = []
         for i in range(self.listWidgetQueue.count()):
             imageInput = self.listWidgetQueue.item(i).text()
-            sp = subprocess.Popen("avifenc " + self.avifParams + " \"" + imageInput + "\" " + " \"" + imageInput + ".avif" + "\"", shell=True)
-            sp.wait()
-        #sp = subprocess.Popen("avifenc " + self.avifCMD + " \"" + self.imageInput + "\" " + " \"" + self.imageInput + ".avif" + "\"", shell=True)
-        #print("avifenc " + self.avifCMD + " \"" + self.imageInput + "\" " + " \"" + self.imageInput + ".avif" + "\"")
-        #sp.wait()
+            imgOutput = os.path.join(self.imageOutput, os.path.splitext(os.path.splitext(os.path.basename(imageInput))[0])[0])
+            print(imgOutput)
+            avifCMD = "avifenc " + self.avifParams + " \"" + imageInput + "\" " + " \"" + imgOutput + ".avif" + "\""
+            commands.append(avifCMD)
+
+        self.progressBar.setMaximum(len(commands))  # Sets the Max Value of Progressbar
+
+        pool = Pool(self.spinBoxParallelWorkers.value())  # Sets the amount of workers
+
+        for i, returncode in enumerate(pool.imap(partial(call, shell=True), commands)):  # Multi Threaded Encoding
+            self.progressBar.setValue(self.progressBar.value() + 1 )  # Increases Progressbar Progress
+
+        self.showDialog()  # Message Box Finished Encoding
+        self.progressBar.setValue(0)  # Resets the Progressbar
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
