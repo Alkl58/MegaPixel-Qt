@@ -30,7 +30,69 @@ class megapixel(QtWidgets.QMainWindow):
         self.pushButtonSaveTo.clicked.connect(self.SetDestination)
         self.pushButtonClearQueue.clicked.connect(self.ClearQueue)
         self.comboBoxEncoders.currentIndexChanged.connect(self.ToggleUiElems)
+        self.checkBoxCustomSettings.stateChanged.connect(self.ToggleCustomSettings)
+        self.checkBoxAvifLossless.stateChanged.connect(self.ToggleAvifLossless)
         self.show()  # Show the GUI
+
+
+    def ToggleAvifLossless(self):
+        # This function disables visually Min/Max Q when lossless is toggled
+        if self.checkBoxAvifLossless.isChecked() is True:
+            self.spinBoxAvifMinQ.setEnabled(False)
+            self.spinBoxAvifMaxQ.setEnabled(False)
+            self.labelAvifMinQ.setEnabled(False)
+            self.labelAvifMaxQ.setEnabled(False)
+        else:
+            self.spinBoxAvifMinQ.setEnabled(True)
+            self.spinBoxAvifMaxQ.setEnabled(True)
+            self.labelAvifMinQ.setEnabled(True)
+            self.labelAvifMaxQ.setEnabled(True)
+
+    def ToggleCustomSettings(self):
+        # This function disables visually everything when custom settings is toggled
+        if self.checkBoxCustomSettings.isChecked() is True:
+            self.spinBoxAvifMinQ.setEnabled(False)
+            self.spinBoxAvifMaxQ.setEnabled(False)
+            self.labelAvifMinQ.setEnabled(False)
+            self.labelAvifMaxQ.setEnabled(False)
+            self.checkBoxAvifLossless.setEnabled(False)
+            self.labelAvifDepth.setEnabled(False)
+            self.comboBoxAvifDepth.setEnabled(False)
+            self.labelAvifColorFormat.setEnabled(False)
+            self.comboBoxAvifColorFormat.setEnabled(False)
+            self.labelAvifRange.setEnabled(False)
+            self.comboBoxAvifRange.setEnabled(False)
+            self.labelAvifTileRows.setEnabled(False)
+            self.spinBoxAvifTileRows.setEnabled(False)
+            self.labelAvifTileColumns.setEnabled(False)
+            self.spinBoxAvifTileCols.setEnabled(False)
+            self.labelAvifThreads.setEnabled(False)
+            self.spinBoxAvifThreads.setEnabled(False)
+            self.labelAvifSpeed.setEnabled(False)
+            self.spinBoxAvifSpeed.setEnabled(False)
+            self.SetAvifParams(True)
+            self.textEditCustomSettings.setText(self.avifParams)
+        else:
+            if self.checkBoxAvifLossless.isChecked() is False:
+                self.spinBoxAvifMinQ.setEnabled(True)
+                self.spinBoxAvifMaxQ.setEnabled(True)
+                self.labelAvifMinQ.setEnabled(True)
+                self.labelAvifMaxQ.setEnabled(True)
+            self.checkBoxAvifLossless.setEnabled(True)
+            self.labelAvifDepth.setEnabled(True)
+            self.comboBoxAvifDepth.setEnabled(True)
+            self.labelAvifColorFormat.setEnabled(True)
+            self.comboBoxAvifColorFormat.setEnabled(True)
+            self.labelAvifRange.setEnabled(True)
+            self.comboBoxAvifRange.setEnabled(True)
+            self.labelAvifTileRows.setEnabled(True)
+            self.spinBoxAvifTileRows.setEnabled(True)
+            self.labelAvifTileColumns.setEnabled(True)
+            self.spinBoxAvifTileCols.setEnabled(True)
+            self.labelAvifThreads.setEnabled(True)
+            self.spinBoxAvifThreads.setEnabled(True)
+            self.labelAvifSpeed.setEnabled(True)
+            self.spinBoxAvifSpeed.setEnabled(True)
 
     def ToggleUiElems(self):
         if self.comboBoxEncoders.currentIndex() == 0:
@@ -105,20 +167,27 @@ class megapixel(QtWidgets.QMainWindow):
         msgBox.exec()
 
     def StartEncoding(self):
-        self.SetAvifParams()
+        self.SetAvifParams(False)
         asyncio.run(self.Encode())
 
-    def SetAvifParams(self):
+    def SetAvifParams(self, custom):
         # Sets the params for avif encoding
-        self.avifParams = " --depth " + self.comboBoxAvifDepth.currentText()
-        self.avifParams += " --yuv " + self.comboBoxAvifColorFormat.currentText()
-        self.avifParams += " --range " + self.comboBoxAvifRange.currentText()
-        self.avifParams += " --min " + str(self.spinBoxAvifMinQ.value()) + " --max " + str(self.spinBoxAvifMaxQ.value())
-        self.avifParams += " --tilerowslog2 " + str(self.spinBoxAvifTileRows.value()) + " --tilecolslog2 " + str(self.spinBoxAvifTileCols.value())
-        self.avifParams += " --speed " + str(self.spinBoxAvifSpeed.value()) + " --jobs " + str(self.spinBoxAvifThreads.value())
+        if self.checkBoxCustomSettings.isChecked is False or custom is True:
+            self.avifParams = " --depth " + self.comboBoxAvifDepth.currentText()
+            self.avifParams += " --yuv " + self.comboBoxAvifColorFormat.currentText()
+            self.avifParams += " --range " + self.comboBoxAvifRange.currentText()
+            if self.checkBoxAvifLossless.isChecked is False:
+                self.avifParams += " --min " + str(self.spinBoxAvifMinQ.value()) + " --max " + str(self.spinBoxAvifMaxQ.value())
+            else:
+                self.avifParams += " --lossless"
+            self.avifParams += " --tilerowslog2 " + str(self.spinBoxAvifTileRows.value()) + " --tilecolslog2 " + str(self.spinBoxAvifTileCols.value())
+            self.avifParams += " --speed " + str(self.spinBoxAvifSpeed.value()) + " --jobs " + str(self.spinBoxAvifThreads.value())
+        else:
+            self.avifParams = self.textEditCustomSettings.toPlainText()
+
 
     async def Encode(self):
-        commands = []
+        commands = [ ]
         for i in range(self.listWidgetQueue.count()):
             imageInput = self.listWidgetQueue.item(i).text()
             imgOutput = os.path.join(self.imageOutput, os.path.splitext(os.path.splitext(os.path.basename(imageInput))[0])[0])
@@ -127,9 +196,7 @@ class megapixel(QtWidgets.QMainWindow):
             commands.append(avifCMD)
 
         self.progressBar.setMaximum(len(commands))  # Sets the Max Value of Progressbar
-
         pool = Pool(self.spinBoxParallelWorkers.value())  # Sets the amount of workers
-
         for i, returncode in enumerate(pool.imap(partial(call, shell=True), commands)):  # Multi Threaded Encoding
             self.progressBar.setValue(self.progressBar.value() + 1 )  # Increases Progressbar Progress
 
