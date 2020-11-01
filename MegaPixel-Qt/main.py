@@ -15,6 +15,7 @@ import asyncio
 class megapixel(QtWidgets.QMainWindow):
 
     imageOutput = ""
+    outputSet = False
     avifParams = ""
     webpParams = ""
     cjxlParams = ""
@@ -174,7 +175,7 @@ class megapixel(QtWidgets.QMainWindow):
             self.comboBoxWebpLossless.setEnabled(False)
 
     # Toggles Quality, PSNR and Lossless visually off
-    def ToggleWebpSize(self):        
+    def ToggleWebpSize(self):
         if self.checkBoxWebpSize.isChecked() is True:
             self.checkBoxWebpQuality.setChecked(False)
             self.checkBoxWebpPSNR.setChecked(False)
@@ -185,7 +186,7 @@ class megapixel(QtWidgets.QMainWindow):
             self.comboBoxWebpLossless.setEnabled(False)
 
     # Toggles Quality, Target Size and Lossless visually off
-    def ToggleWebpPSNR(self):        
+    def ToggleWebpPSNR(self):
         if self.checkBoxWebpPSNR.isChecked() is True:
             self.checkBoxWebpQuality.setChecked(False)
             self.checkBoxWebpSize.setChecked(False)
@@ -233,6 +234,7 @@ class megapixel(QtWidgets.QMainWindow):
     def SetDestination(self):
         self.imageOutput = str(QFileDialog.getExistingDirectory(self, "Select Output Directory"))
         self.labelOutput.setText("Output: " + self.imageOutput)
+        self.outputSet = True
 
     def ClearQueue(self):
         self.listWidgetQueue.clear()
@@ -308,7 +310,11 @@ class megapixel(QtWidgets.QMainWindow):
         commands = [ ]
         for i in range(self.listWidgetQueue.count()):
             imageInput = self.listWidgetQueue.item(i).text()
-            imgOutput = os.path.join(self.imageOutput, os.path.splitext(os.path.splitext(os.path.basename(imageInput))[0])[0])
+            if self.outputSet is True:
+                imgOutput = os.path.join(self.imageOutput, os.path.splitext(os.path.basename(imageInput))[0])
+            else:
+                imgOutput = os.path.join(os.path.dirname(imageInput), os.path.splitext(os.path.basename(imageInput))[0])
+            print(imgOutput)
             if self.comboBoxEncoders.currentIndex() == 0:
                 avifCMD = "avifenc " + self.avifParams + " \"" + imageInput + "\" " + " \"" + imgOutput + ".avif\""
                 commands.append(avifCMD)
