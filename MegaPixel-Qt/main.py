@@ -360,10 +360,10 @@ class megapixel(QtWidgets.QMainWindow):
                 commands.append(webpCMD)
             elif self.comboBoxEncoders.currentIndex() == 2:
                 if self.checkBoxJpegXlEncode.isChecked() is True:
-                    cjxlCMD = "cjxl \"" + imageInput + "\"  \"" + imgOutput + ".jpg\" " + self.cjxlParams
+                    cjxlCMD = "cjxl \"" + imageInput + "\" \"" + imgOutput + ".jpg\"" + self.cjxlParams
                     commands.append(cjxlCMD)
                 else:
-                    djxlCMD = "djxl \"" + imageInput + "\"  \"" + imgOutput + "." + self.comboBoxJpegXlDecodeFormat.currentText() + "\" " + self.djxlParams
+                    djxlCMD = "djxl \"" + imageInput + "\" \"" + imgOutput + "." + self.comboBoxJpegXlDecodeFormat.currentText() + "\" " + self.djxlParams
                     commands.append(djxlCMD)
             elif self.comboBoxEncoders.currentIndex() == 3:
                 mozjCMD = "cjpeg" + self.mozjParams + " -outfile \"" + imgOutput + ".jpg\" \"" + imageInput + "\""
