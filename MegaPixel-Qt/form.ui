@@ -965,9 +965,6 @@
        <height>261</height>
       </rect>
      </property>
-     <property name="visible">
-      <bool>false</bool>
-     </property>
      <property name="toolTip">
       <string>100 = mathematically lossless. Default for already-lossy input (JPEG/GIF).</string>
      </property>
@@ -984,10 +981,10 @@
        </rect>
       </property>
       <property name="maximum">
-       <number>100</number>
+       <number>99</number>
       </property>
       <property name="value">
-       <number>100</number>
+       <number>85</number>
       </property>
      </widget>
      <widget class="QLabel" name="labelJpegXlSpeed">
@@ -1258,6 +1255,9 @@
        <width>761</width>
        <height>261</height>
       </rect>
+     </property>
+     <property name="visible">
+      <bool>false</bool>
      </property>
      <property name="toolTip">
       <string>Tune trellis optimization - Default: PSNR-HVS</string>
