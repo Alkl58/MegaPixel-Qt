@@ -156,7 +156,7 @@ class megapixel(QtWidgets.QMainWindow):
                 self.groupBoxWebp.setEnabled(True)
             elif self.comboBoxEncoders.currentIndex() == 2:
                 self.groupBoxJpegXl.setEnabled(True)
-            elif self.comboBoxEncoders.currentIndex() == 2:
+            elif self.comboBoxEncoders.currentIndex() == 3:
                 self.groupBoxMozjpeg.setEnabled(True)
 
     # Toggles the visibility of the encoder settings
