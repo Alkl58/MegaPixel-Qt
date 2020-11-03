@@ -53,7 +53,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="tab">
     <attribute name="title">
@@ -68,6 +68,15 @@
        <height>311</height>
       </rect>
      </property>
+     <property name="dragEnabled">
+      <bool>false</bool>
+     </property>
+     <property name="dragDropMode">
+      <enum>QAbstractItemView::DragDrop</enum>
+     </property>
+     <property name="defaultDropAction">
+      <enum>Qt::CopyAction</enum>
+     </property>
     </widget>
     <widget class="QPushButton" name="pushButtonClearQueue">
      <property name="geometry">
@@ -80,6 +89,19 @@
      </property>
      <property name="text">
       <string>Clear</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButtonRemoveQueue">
+     <property name="geometry">
+      <rect>
+       <x>577</x>
+       <y>0</y>
+       <width>111</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Remove Item(s)</string>
      </property>
     </widget>
    </widget>
@@ -943,6 +965,9 @@
        <height>261</height>
       </rect>
      </property>
+     <property name="visible">
+      <bool>false</bool>
+     </property>
      <property name="toolTip">
       <string>100 = mathematically lossless. Default for already-lossy input (JPEG/GIF).</string>
      </property>
@@ -1223,6 +1248,100 @@
       <property name="value">
        <number>100</number>
       </property>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="groupBoxMozjpeg">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>761</width>
+       <height>261</height>
+      </rect>
+     </property>
+     <property name="toolTip">
+      <string>Tune trellis optimization - Default: PSNR-HVS</string>
+     </property>
+     <property name="title">
+      <string>MOZJPEG Settings</string>
+     </property>
+     <widget class="QLabel" name="label_5">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>40</y>
+        <width>58</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Quality:</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="spinBoxMozjpegQ">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>40</y>
+        <width>52</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="toolTip">
+       <string>Compression quality (0..100; 5-95 is most useful range, default is 75)</string>
+      </property>
+      <property name="maximum">
+       <number>100</number>
+      </property>
+      <property name="value">
+       <number>75</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_6">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>90</y>
+        <width>58</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Tune:</string>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBoxMozjpegTune">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>90</y>
+        <width>87</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="currentIndex">
+       <number>1</number>
+      </property>
+      <item>
+       <property name="text">
+        <string>psnr</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>hvs-psnr</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>ssim</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>ms-ssim</string>
+       </property>
+      </item>
      </widget>
     </widget>
    </widget>
@@ -1561,6 +1680,11 @@ p, li { white-space: pre-wrap; }
    <item>
     <property name="text">
      <string>jpegxl</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>mozjpeg</string>
     </property>
    </item>
   </widget>
