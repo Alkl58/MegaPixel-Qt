@@ -14,12 +14,13 @@ import asyncio
 
 class megapixel(QtWidgets.QMainWindow):
 
-    imageOutput = ""
+    imageOutput = None
     outputSet = False
-    avifParams = ""
-    webpParams = ""
-    cjxlParams = ""
-    djxlParams = ""
+    avifParams = None
+    webpParams = None
+    cjxlParams = None
+    djxlParams = None
+    mozjParams = None
 
     def __init__(self):
 
@@ -33,6 +34,7 @@ class megapixel(QtWidgets.QMainWindow):
         self.pushButtonOpenSource.clicked.connect(self.OpenImageSource)
         self.pushButtonSaveTo.clicked.connect(self.SetDestination)
         self.pushButtonClearQueue.clicked.connect(self.ClearQueue)
+        self.pushButtonRemoveQueue.clicked.connect(self.RemoveFromQueue)
         self.comboBoxEncoders.currentIndexChanged.connect(self.ToggleUiElems)
         self.checkBoxCustomSettings.stateChanged.connect(self.ToggleCustomSettings)
 
@@ -59,7 +61,9 @@ class megapixel(QtWidgets.QMainWindow):
         self.groupBoxAvif.show()
         self.groupBoxWebp.hide()
         self.groupBoxJpegXl.hide()
+        self.groupBoxMozjpeg.hide()
         self.show()  # Show the GUI
+
 
     def ToggleJpegXlDecodeSettings(self):
         if self.comboBoxJpegXlDecodeFormat.currentIndex() == 1:
@@ -115,18 +119,19 @@ class megapixel(QtWidgets.QMainWindow):
             self.labelAvifMaxQ.setEnabled(True)
 
     # This function disables visually everything when custom settings is toggled
+    # It also sets the text inside the textEdit Box
     def ToggleCustomSettings(self):
         if self.checkBoxCustomSettings.isChecked() is True:
             self.textEditCustomSettings.setEnabled(True)
-            if self.comboBoxEncoders.currentIndex() == 0:
+            if self.comboBoxEncoders.currentIndex() == 0:               #  avif
                 self.SetAvifParams(True)
                 self.textEditCustomSettings.setText(self.avifParams)
                 self.groupBoxAvif.setEnabled(False)
-            elif self.comboBoxEncoders.currentIndex() == 1:
+            elif self.comboBoxEncoders.currentIndex() == 1:             # webp
                 self.SetWebpParams(True)
                 self.textEditCustomSettings.setText(self.webpParams)
                 self.groupBoxWebp.setEnabled(False)
-            elif self.comboBoxEncoders.currentIndex() == 2:
+            elif self.comboBoxEncoders.currentIndex() == 2:             # jpegxl
                 if self.checkBoxJpegXlEncode.isChecked() is True:
                     self.SetJpegXlParams(True)
                     self.textEditCustomSettings.setText(self.cjxlParams)
@@ -134,7 +139,11 @@ class megapixel(QtWidgets.QMainWindow):
                     self.SetJpegXlDecodeParams(True)
                     self.textEditCustomSettings.setText(self.djxlParams)
                 self.groupBoxJpegXl.setEnabled(False)
-        else:
+            elif self.comboBoxEncoders.currentIndex() == 3:            # mozjpeg
+                 self.SetMozJpegParams(True)
+                 self.textEditCustomSettings.setText(self.mozjParams)
+                 self.groupBoxMozjpeg.setEnabled(False)
+        else: # CheckBox Custom Settings not checked
             self.textEditCustomSettings.setEnabled(False)
             if self.comboBoxEncoders.currentIndex() == 0:
                 if self.checkBoxAvifLossless.isChecked() is False:
@@ -147,21 +156,31 @@ class megapixel(QtWidgets.QMainWindow):
                 self.groupBoxWebp.setEnabled(True)
             elif self.comboBoxEncoders.currentIndex() == 2:
                 self.groupBoxJpegXl.setEnabled(True)
+            elif self.comboBoxEncoders.currentIndex() == 2:
+                self.groupBoxMozjpeg.setEnabled(True)
 
-
+    # Toggles the visibility of the encoder settings
     def ToggleUiElems(self):
         if self.comboBoxEncoders.currentIndex() == 0:
             self.groupBoxAvif.show()
             self.groupBoxWebp.hide()
             self.groupBoxJpegXl.hide()
+            self.groupBoxMozjpeg.hide()
         elif self.comboBoxEncoders.currentIndex() == 1:
             self.groupBoxAvif.hide()
             self.groupBoxWebp.show()
             self.groupBoxJpegXl.hide()
+            self.groupBoxMozjpeg.hide()
         elif self.comboBoxEncoders.currentIndex() == 2:
             self.groupBoxAvif.hide()
             self.groupBoxWebp.hide()
             self.groupBoxJpegXl.show()
+            self.groupBoxMozjpeg.hide()
+        elif self.comboBoxEncoders.currentIndex() == 3:
+            self.groupBoxAvif.hide()
+            self.groupBoxWebp.hide()
+            self.groupBoxJpegXl.hide()
+            self.groupBoxMozjpeg.show()
 
     # Toggles Target Size, PSNR and Lossless visually off
     def ToggleWebpQuality(self):
@@ -236,8 +255,16 @@ class megapixel(QtWidgets.QMainWindow):
         self.labelOutput.setText("Output: " + self.imageOutput)
         self.outputSet = True
 
+    # Clears the Queue List
     def ClearQueue(self):
         self.listWidgetQueue.clear()
+
+    # Removes item(s) from the Queue List
+    def RemoveFromQueue(self):
+        listItems = self.listWidgetQueue.selectedItems()
+        if not listItems: return
+        for item in listItems:
+            self.listWidgetQueue.takeItem(self.listWidgetQueue.row(item))
 
     def showDialog(self):
         # Dialog to tell that encoding is finished
@@ -252,6 +279,7 @@ class megapixel(QtWidgets.QMainWindow):
         self.SetAvifParams(False)
         self.SetWebpParams(False)
         self.SetJpegXlParams(False)
+        self.SetMozJpegParams(False)
         asyncio.run(self.Encode())
 
     # Sets the params for avif encoding
@@ -269,6 +297,7 @@ class megapixel(QtWidgets.QMainWindow):
         else:
             self.avifParams = self.textEditCustomSettings.toPlainText()
 
+    # Sets the params for webp encoding
     def SetWebpParams(self, custom):
         if self.checkBoxCustomSettings.isChecked() is False or custom is True:
             self.webpParams = " -preset " + self.comboBoxWebpPreset.currentText()
@@ -289,6 +318,7 @@ class megapixel(QtWidgets.QMainWindow):
             else:
                 self.webpParams += " -z " + str(self.comboBoxWebpLossless.currentIndex())
 
+    # Sets the params for jpegxl encoding
     def SetJpegXlParams(self, custom):
         if self.checkBoxCustomSettings.isChecked() is False or custom is True:
             self.cjxlParams = " --speed=" + str(self.comboBoxJpegXlSpeed.currentIndex() + 3)
@@ -297,6 +327,7 @@ class megapixel(QtWidgets.QMainWindow):
             elif self.checkBoxJpegXlQ.isChecked() is True:
                 self.cjxlParams += " --quality=" + str(self.spinBoxJpegXlQ.value())
 
+    # Sets the params for jpegxl decoding
     def SetJpegXlDecodeParams(self, custom):
         if self.checkBoxCustomSettings.isChecked() is False or custom is True:
             self.djxlParams = ""
@@ -304,6 +335,12 @@ class megapixel(QtWidgets.QMainWindow):
                 self.djxlParams += " --jpeg_quality=" + str(self.spinBoxJpegXlDecodeQ.value())
                 if self.checkBoxJpegXlDecodesjpeg.isChecked() is True:
                     self.djxlParams += " --use_sjpeg"
+
+    def SetMozJpegParams(self, custom):
+        if self.checkBoxCustomSettings.isChecked() is False or custom is True:
+            self.mozjParams = ""
+            self.mozjParams += " -quality " + str(self.spinBoxMozjpegQ.value())
+            self.mozjParams += " -tune-" + self.comboBoxMozjpegTune.currentText()
 
 
     async def Encode(self):
@@ -328,6 +365,9 @@ class megapixel(QtWidgets.QMainWindow):
                 else:
                     djxlCMD = "djxl \"" + imageInput + "\"  \"" + imgOutput + "." + self.comboBoxJpegXlDecodeFormat.currentText() + "\" " + self.djxlParams
                     commands.append(djxlCMD)
+            elif self.comboBoxEncoders.currentIndex() == 3:
+                mozjCMD = "cjpeg" + self.mozjParams + " -outfile \"" + imgOutput + ".jpg\" \"" + imageInput + "\""
+                commands.append(mozjCMD)
 
         self.progressBar.setMaximum(len(commands))  # Sets the Max Value of Progressbar
         pool = Pool(self.spinBoxParallelWorkers.value())  # Sets the amount of workers
