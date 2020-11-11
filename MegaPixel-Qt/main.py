@@ -10,6 +10,7 @@ import sys
 import time
 import subprocess
 import asyncio
+import platform
 
 
 class megapixel(QtWidgets.QMainWindow):
@@ -368,6 +369,36 @@ class megapixel(QtWidgets.QMainWindow):
             self.mozjParams += " -quality " + str(self.spinBoxMozjpegQ.value())
             self.mozjParams += " -tune-" + self.comboBoxMozjpegTune.currentText()
 
+    def AvifPath(self):
+        if platform.system() == "Windows":
+            return os.path.join(os.path.dirname(__file__), "Encoders", "avif", "avifenc.exe") + " "
+        else:
+            return "avifenc "
+
+    def EJpegXlPath(self):
+        if platform.system() == "Windows":
+            return os.path.join(os.path.dirname(__file__), "Encoders", "jpegxl", "cjpegxl.exe") + " "
+        else:
+            return "cjxl "
+
+    def DJpegXlPath(self):
+        if platform.system() == "Windows":
+            return os.path.join(os.path.dirname(__file__), "Encoders", "jpegxl", "djpegxl.exe") + " "
+        else:
+            return "djxl "
+
+    def MozJpegPath(self):
+        if platform.system() == "Windows":
+            return os.path.join(os.path.dirname(__file__), "Encoders", "mozjpeg", "cjpeg.exe") + " "
+        else:
+            return "cjpeg "
+
+    def WebPPath(self):
+        if platform.system() == "Windows":
+            return os.path.join(os.path.dirname(__file__), "Encoders", "webp", "cwebp.exe") + " "
+        else:
+            return "cwebp "
+
 
     async def Encode(self):
         commands = [ ]
@@ -379,22 +410,21 @@ class megapixel(QtWidgets.QMainWindow):
                 imgOutput = os.path.join(os.path.dirname(imageInput), os.path.splitext(os.path.basename(imageInput))[0])
             print(imgOutput)
             if self.comboBoxEncoders.currentIndex() == 0:
-                avifCMD = "avifenc " + self.avifParams + " \"" + imageInput + "\" " + " \"" + imgOutput + ".avif\""
+                avifCMD = self.AvifPath() + " " + self.avifParams + " \"" + imageInput + "\" " + " \"" + imgOutput + ".avif\""
                 commands.append(avifCMD)
             elif self.comboBoxEncoders.currentIndex() == 1:
-                webpCMD = "cwebp " + self.webpParams + " \"" + imageInput + "\" " + " -o \"" + imgOutput + ".webp\""
+                webpCMD = self.WebPPath() + self.webpParams + " \"" + imageInput + "\" " + " -o \"" + imgOutput + ".webp\""
                 commands.append(webpCMD)
             elif self.comboBoxEncoders.currentIndex() == 2:
                 if self.checkBoxJpegXlEncode.isChecked() is True:
-                    cjxlCMD = "cjxl \"" + imageInput + "\" \"" + imgOutput + ".jpg\"" + self.cjxlParams
+                    cjxlCMD = self.EJpegXlPath() + " \"" + imageInput + "\" \"" + imgOutput + ".jpg\"" + self.cjxlParams
                     commands.append(cjxlCMD)
                 else:
-                    djxlCMD = "djxl \"" + imageInput + "\" \"" + imgOutput + "." + self.comboBoxJpegXlDecodeFormat.currentText() + "\" " + self.djxlParams
+                    djxlCMD = self.DJpegXlPath() + " \"" + imageInput + "\" \"" + imgOutput + "." + self.comboBoxJpegXlDecodeFormat.currentText() + "\" " + self.djxlParams
                     commands.append(djxlCMD)
             elif self.comboBoxEncoders.currentIndex() == 3:
-                mozjCMD = "cjpeg" + self.mozjParams + " -outfile \"" + imgOutput + ".jpg\" \"" + imageInput + "\""
+                mozjCMD = self.MozJpegPath() + self.mozjParams + " -outfile \"" + imgOutput + ".jpg\" \"" + imageInput + "\""
                 commands.append(mozjCMD)
-                
 
         self.progressBar.setMaximum(len(commands))  # Sets the Max Value of Progressbar
         pool = Pool(self.spinBoxParallelWorkers.value())  # Sets the amount of workers
