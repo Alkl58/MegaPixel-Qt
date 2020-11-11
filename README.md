@@ -14,7 +14,7 @@
 
 <h2 align="center">Windows Version</h2>
 
-![image](https://i.imgur.com/vozvSS6.png)
+![image](https://i.imgur.com/SLbfi6n.png)
 
 ### ![image](https://i.imgur.com/Ql4lP4E.png) Installation
 
