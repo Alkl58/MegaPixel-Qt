@@ -4,7 +4,8 @@
 
 ![image](https://i.imgur.com/tp5Eepc.png)
 
-### Installation (Linux):
+### ![Linux](https://i.imgur.com/FOmiXXW.png) Installation
+
 1. Install [avif](https://aur.archlinux.org/packages/libavif-git/) / [webp](https://developers.google.com/speed/webp/) / [jpegxl](https://aur.archlinux.org/packages/libjpeg-xl-git/) / [mozjpeg](https://aur.archlinux.org/packages/mozjpeg), they are located in AUR 
 2. Install [Python](https://www.python.org/)
 3. Install [PyQt5](https://riverbankcomputing.com/software/pyqt/intro): `python -m pip install pyqt5`
