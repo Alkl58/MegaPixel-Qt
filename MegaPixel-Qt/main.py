@@ -1,6 +1,6 @@
 # This Python file uses the following encoding: utf-8
 
-from PyQt5 import QtWidgets, uic
+from PyQt5 import QtWidgets, uic, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from multiprocessing.dummy import Pool
 from functools import partial
@@ -62,7 +62,33 @@ class megapixel(QtWidgets.QMainWindow):
         self.groupBoxWebp.hide()
         self.groupBoxJpegXl.hide()
         self.groupBoxMozjpeg.hide()
+
+        # Drag & Drop
+        self.listWidgetQueue.setAcceptDrops(True)
+        self.listWidgetQueue.viewport().installEventFilter(self)
+        types = ['text/uri-list']
+        types.extend(self.listWidgetQueue.mimeTypes())
+        self.listWidgetQueue.mimeTypes  = lambda: types
+
         self.show()  # Show the GUI
+
+
+    def eventFilter(self, source, event):
+        if (event.type() == QtCore.QEvent.Drop and
+            event.mimeData().hasUrls()):
+            for url in event.mimeData().urls():
+                self.addFile(url.toLocalFile())
+            return True
+        return super().eventFilter(source, event)
+
+    def addFile(self, filepath):
+        if os.path.isfile(filepath):
+            self.listWidgetQueue.addItem(filepath)
+        else:
+            for filename in os.listdir(filepath):
+                if filename.endswith(".png") or filename.endswith(".jpg") or filename.endswith(".jpeg"):
+                    self.listWidgetQueue.addItem(str(os.path.join(filepath, filename)))
+
 
 
     def ToggleJpegXlDecodeSettings(self):
@@ -368,6 +394,7 @@ class megapixel(QtWidgets.QMainWindow):
             elif self.comboBoxEncoders.currentIndex() == 3:
                 mozjCMD = "cjpeg" + self.mozjParams + " -outfile \"" + imgOutput + ".jpg\" \"" + imageInput + "\""
                 commands.append(mozjCMD)
+                
 
         self.progressBar.setMaximum(len(commands))  # Sets the Max Value of Progressbar
         pool = Pool(self.spinBoxParallelWorkers.value())  # Sets the amount of workers
