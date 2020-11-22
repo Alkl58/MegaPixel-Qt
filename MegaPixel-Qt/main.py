@@ -269,10 +269,19 @@ class megapixel(QtWidgets.QMainWindow):
 
     def OpenImageSource(self):
         if self.checkBoxBatchAdd.isChecked() is True:
+            # Batch Adding
             imageInputBatch = str(QFileDialog.getExistingDirectory(self, "Select Input Directory"))
-            for filename in os.listdir(imageInputBatch):
-                if filename.endswith(".png") or filename.endswith(".jpg") or filename.endswith(".jpeg"):
-                    self.listWidgetQueue.addItem(str(os.path.join(imageInputBatch, filename)))
+            if self.checkBoxBatchAddSubfolders.isChecked() is True:
+                for root, dirs, files in os.walk(imageInputBatch):
+                    for file in files:
+                        filepath = root + os.sep + file
+                        if filepath.endswith((".jpg", ".jpeg", "png")):
+                            self.listWidgetQueue.addItem(str(os.path.join(filepath)))
+                            print(file)
+            else: # Batch without Subfolders
+                for filename in os.listdir(imageInputBatch):
+                    if filename.endswith(".png") or filename.endswith(".jpg") or filename.endswith(".jpeg"):
+                        self.listWidgetQueue.addItem(str(os.path.join(imageInputBatch, filename)))
         else:
             fileName, _ = QFileDialog.getOpenFileName(self, "Select Image...", "", "All Files (*)")
             self.listWidgetQueue.addItem(fileName) # Adds the selected input file to the queue
@@ -363,36 +372,42 @@ class megapixel(QtWidgets.QMainWindow):
                 if self.checkBoxJpegXlDecodesjpeg.isChecked() is True:
                     self.djxlParams += " --use_sjpeg"
 
+    # Sets the MozJpeg params
     def SetMozJpegParams(self, custom):
         if self.checkBoxCustomSettings.isChecked() is False or custom is True:
             self.mozjParams = ""
             self.mozjParams += " -quality " + str(self.spinBoxMozjpegQ.value())
             self.mozjParams += " -tune-" + self.comboBoxMozjpegTune.currentText()
 
+    # Sets the avif executable path
     def AvifPath(self):
         if platform.system() == "Windows":
             return os.path.join(os.path.dirname(__file__), "Encoders", "avif", "avifenc.exe") + " "
         else:
             return "avifenc "
 
+    # Sets the jpegxl encoder executable path
     def EJpegXlPath(self):
         if platform.system() == "Windows":
             return os.path.join(os.path.dirname(__file__), "Encoders", "jpegxl", "cjpegxl.exe") + " "
         else:
             return "cjxl "
 
+    # Sets the jpegxl decoder executable path
     def DJpegXlPath(self):
         if platform.system() == "Windows":
             return os.path.join(os.path.dirname(__file__), "Encoders", "jpegxl", "djpegxl.exe") + " "
         else:
             return "djxl "
 
+    # Sets the mozjpeg executable path
     def MozJpegPath(self):
         if platform.system() == "Windows":
             return os.path.join(os.path.dirname(__file__), "Encoders", "mozjpeg", "cjpeg.exe") + " "
         else:
             return "cjpeg "
 
+    # Sets the webp executable path
     def WebPPath(self):
         if platform.system() == "Windows":
             return os.path.join(os.path.dirname(__file__), "Encoders", "webp", "cwebp.exe") + " "
