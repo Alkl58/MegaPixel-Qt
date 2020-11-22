@@ -1570,6 +1570,22 @@ p, li { white-space: pre-wrap; }
       <string>License: https://doc.qt.io/qt-5/lgpl.html</string>
      </property>
     </widget>
+    <widget class="QCheckBox" name="checkBoxBatchAddSubfolders">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>70</y>
+       <width>181</width>
+       <height>26</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Include Subfolders in Batch Mode</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QPushButton" name="pushButtonSaveTo">
@@ -1699,19 +1715,6 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="text">
     <string>Encoder:</string>
-   </property>
-  </widget>
-  <widget class="QCheckBox" name="checkBoxBatchAddSubfolders">
-   <property name="geometry">
-    <rect>
-     <x>260</x>
-     <y>20</y>
-     <width>111</width>
-     <height>26</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>with subfolders</string>
    </property>
   </widget>
  </widget>
