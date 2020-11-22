@@ -86,9 +86,16 @@ class megapixel(QtWidgets.QMainWindow):
         if os.path.isfile(filepath):
             self.listWidgetQueue.addItem(filepath)
         else:
-            for filename in os.listdir(filepath):
-                if filename.endswith(".png") or filename.endswith(".jpg") or filename.endswith(".jpeg"):
-                    self.listWidgetQueue.addItem(str(os.path.join(filepath, filename)))
+            if self.checkBoxBatchAddSubfolders.isChecked() is True:
+                for root, dirs, files in os.walk(filepath):
+                    for file in files:
+                        filepatha = root + os.sep + file
+                        if filepatha.endswith((".jpg", ".jpeg", "png")):
+                            self.listWidgetQueue.addItem(str(os.path.join(filepatha)))
+            else:
+                for filename in os.listdir(filepath):
+                    if filename.endswith(".png") or filename.endswith(".jpg") or filename.endswith(".jpeg"):
+                        self.listWidgetQueue.addItem(str(os.path.join(filepath, filename)))
 
 
 
@@ -277,7 +284,6 @@ class megapixel(QtWidgets.QMainWindow):
                         filepath = root + os.sep + file
                         if filepath.endswith((".jpg", ".jpeg", "png")):
                             self.listWidgetQueue.addItem(str(os.path.join(filepath)))
-                            print(file)
             else: # Batch without Subfolders
                 for filename in os.listdir(imageInputBatch):
                     if filename.endswith(".png") or filename.endswith(".jpg") or filename.endswith(".jpeg"):
