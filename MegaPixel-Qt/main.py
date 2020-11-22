@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from multiprocessing.dummy import Pool
 from functools import partial
 from subprocess import call
+from os import path
 import os
 import sys
 import time
@@ -17,6 +18,7 @@ class megapixel(QtWidgets.QMainWindow):
 
     imageOutput = None
     outputSet = False
+    tempInput = None
     avifParams = None
     webpParams = None
     cjxlParams = None
@@ -87,6 +89,7 @@ class megapixel(QtWidgets.QMainWindow):
             self.listWidgetQueue.addItem(filepath)
         else:
             if self.checkBoxBatchAddSubfolders.isChecked() is True:
+                self.tempInput = filepath
                 for root, dirs, files in os.walk(filepath):
                     for file in files:
                         filepatha = root + os.sep + file
@@ -279,6 +282,7 @@ class megapixel(QtWidgets.QMainWindow):
             # Batch Adding
             imageInputBatch = str(QFileDialog.getExistingDirectory(self, "Select Input Directory"))
             if self.checkBoxBatchAddSubfolders.isChecked() is True:
+                self.tempInput = imageInputBatch
                 for root, dirs, files in os.walk(imageInputBatch):
                     for file in files:
                         filepath = root + os.sep + file
@@ -426,7 +430,17 @@ class megapixel(QtWidgets.QMainWindow):
         for i in range(self.listWidgetQueue.count()):
             imageInput = self.listWidgetQueue.item(i).text()
             if self.outputSet is True:
-                imgOutput = os.path.join(self.imageOutput, os.path.splitext(os.path.basename(imageInput))[0])
+                if self.checkBoxBatchAddSubfolders.isChecked() is True:
+                    tempFileName = os.path.basename(imageInput)
+                    n = len(self.tempInput)
+                    sub = imageInput[n:]
+                    n = len(tempFileName)
+                    sub = sub[:-n]
+                    if path.exists(self.imageOutput + sub) == False:
+                        os.mkdir(self.imageOutput + sub)
+                    imgOutput = os.path.join(self.imageOutput + sub, os.path.splitext(os.path.basename(imageInput))[0])
+                else:
+                    imgOutput = os.path.join(self.imageOutput, os.path.splitext(os.path.basename(imageInput))[0])
             else:
                 imgOutput = os.path.join(os.path.dirname(imageInput), os.path.splitext(os.path.basename(imageInput))[0])
             print(imgOutput)
