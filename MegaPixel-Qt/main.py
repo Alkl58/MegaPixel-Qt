@@ -77,6 +77,7 @@ class megapixel(QtWidgets.QMainWindow):
 
 
     def eventFilter(self, source, event):
+        # Drag & Drop Stuff
         if (event.type() == QtCore.QEvent.Drop and
             event.mimeData().hasUrls()):
             for url in event.mimeData().urls():
@@ -86,19 +87,22 @@ class megapixel(QtWidgets.QMainWindow):
 
     def addFile(self, filepath):
         if os.path.isfile(filepath):
+            # Adding a single File
             self.listWidgetQueue.addItem(filepath)
         else:
+            # Batch add files with subfolders
             if self.checkBoxBatchAddSubfolders.isChecked() is True:
                 self.tempInput = filepath
                 for root, dirs, files in os.walk(filepath):
                     for file in files:
-                        filepatha = root + os.sep + file
+                        filepatha = os.path.join(root, file)
                         if filepatha.endswith((".jpg", ".jpeg", "png")):
-                            self.listWidgetQueue.addItem(str(os.path.join(filepatha)))
+                            self.listWidgetQueue.addItem(os.path.join(filepatha))
             else:
+                # Batch add files without subfolder
                 for filename in os.listdir(filepath):
                     if filename.endswith(".png") or filename.endswith(".jpg") or filename.endswith(".jpeg"):
-                        self.listWidgetQueue.addItem(str(os.path.join(filepath, filename)))
+                        self.listWidgetQueue.addItem(os.path.join(filepath, filename))
 
 
 
@@ -288,45 +292,52 @@ class megapixel(QtWidgets.QMainWindow):
                         filepath = root + os.sep + file
                         if filepath.endswith((".jpg", ".jpeg", "png")):
                             self.listWidgetQueue.addItem(str(os.path.join(filepath)))
-            else: # Batch without Subfolders
+            else:
+                # Batch without Subfolders
                 for filename in os.listdir(imageInputBatch):
                     if filename.endswith(".png") or filename.endswith(".jpg") or filename.endswith(".jpeg"):
                         self.listWidgetQueue.addItem(str(os.path.join(imageInputBatch, filename)))
         else:
+            # Add a single file
             fileName, _ = QFileDialog.getOpenFileName(self, "Select Image...", "", "All Files (*)")
             self.listWidgetQueue.addItem(fileName) # Adds the selected input file to the queue
 
     def SetDestination(self):
+        # Set output dir
         self.imageOutput = str(QFileDialog.getExistingDirectory(self, "Select Output Directory"))
         self.labelOutput.setText("Output: " + self.imageOutput)
         self.outputSet = True
 
-    # Clears the Queue List
     def ClearQueue(self):
+        # Clears the Queue List
         self.listWidgetQueue.clear()
 
-    # Removes item(s) from the Queue List
     def RemoveFromQueue(self):
+        # Removes item(s) from the Queue List
         listItems = self.listWidgetQueue.selectedItems()
         if not listItems: return
         for item in listItems:
             self.listWidgetQueue.takeItem(self.listWidgetQueue.row(item))
 
-    def showDialog(self):
+    def showDialog(self, text):
         # Dialog to tell that encoding is finished
         msgBox = QMessageBox()
         msgBox.setIcon(QMessageBox.Information)
-        msgBox.setText("Encoding finished.")
+        msgBox.setText(text)
         msgBox.setWindowTitle("MegaPixel")
         msgBox.setStandardButtons(QMessageBox.Ok)
         msgBox.exec()
 
     def StartEncoding(self):
-        self.SetAvifParams(False)
-        self.SetWebpParams(False)
-        self.SetJpegXlParams(False)
-        self.SetMozJpegParams(False)
-        asyncio.run(self.Encode())
+        # Main Encoding function
+        if self.outputSet == True:
+            self.SetAvifParams(False)
+            self.SetWebpParams(False)
+            self.SetJpegXlParams(False)
+            self.SetMozJpegParams(False)
+            asyncio.run(self.Encode())
+        else:
+            self.showDialog("Output Folder not set!")
 
     # Sets the params for avif encoding
     def SetAvifParams(self, custom):
@@ -427,30 +438,33 @@ class megapixel(QtWidgets.QMainWindow):
 
     async def Encode(self):
         commands = [ ]
+        # Creates argument list
         for i in range(self.listWidgetQueue.count()):
             imageInput = self.listWidgetQueue.item(i).text()
-            if self.outputSet is True:
-                if self.checkBoxBatchAddSubfolders.isChecked() is True:
-                    tempFileName = os.path.basename(imageInput)
-                    n = len(self.tempInput)
-                    sub = imageInput[n:]
-                    n = len(tempFileName)
-                    sub = sub[:-n]
-                    if path.exists(self.imageOutput + sub) == False:
-                        os.mkdir(self.imageOutput + sub)
-                    imgOutput = os.path.join(self.imageOutput + sub, os.path.splitext(os.path.basename(imageInput))[0])
-                else:
-                    imgOutput = os.path.join(self.imageOutput, os.path.splitext(os.path.basename(imageInput))[0])
+            if self.checkBoxBatchAddSubfolders.isChecked() is True:
+                # With Subfolders
+                tempFileName = os.path.basename(imageInput)
+                n = len(self.tempInput)
+                sub = imageInput[n:]
+                n = len(tempFileName)
+                sub = sub[:-n]
+                if path.exists(self.imageOutput + sub) == False:
+                    os.mkdir(self.imageOutput + sub)
+                imgOutput = os.path.join(self.imageOutput + sub, os.path.splitext(os.path.basename(imageInput))[0])
             else:
-                imgOutput = os.path.join(os.path.dirname(imageInput), os.path.splitext(os.path.basename(imageInput))[0])
-            print(imgOutput)
+                # Without Subfolders
+                imgOutput = os.path.join(self.imageOutput, os.path.splitext(os.path.basename(imageInput))[0])
+
             if self.comboBoxEncoders.currentIndex() == 0:
+                # avifencoding
                 avifCMD = self.AvifPath() + " " + self.avifParams + " \"" + imageInput + "\" " + " \"" + imgOutput + ".avif\""
                 commands.append(avifCMD)
             elif self.comboBoxEncoders.currentIndex() == 1:
+                # webp encoding
                 webpCMD = self.WebPPath() + self.webpParams + " \"" + imageInput + "\" " + " -o \"" + imgOutput + ".webp\""
                 commands.append(webpCMD)
             elif self.comboBoxEncoders.currentIndex() == 2:
+                # jpegxl encoding / decoding
                 if self.checkBoxJpegXlEncode.isChecked() is True:
                     cjxlCMD = self.EJpegXlPath() + " \"" + imageInput + "\" \"" + imgOutput + ".jpg\"" + self.cjxlParams
                     commands.append(cjxlCMD)
@@ -458,6 +472,7 @@ class megapixel(QtWidgets.QMainWindow):
                     djxlCMD = self.DJpegXlPath() + " \"" + imageInput + "\" \"" + imgOutput + "." + self.comboBoxJpegXlDecodeFormat.currentText() + "\" " + self.djxlParams
                     commands.append(djxlCMD)
             elif self.comboBoxEncoders.currentIndex() == 3:
+                # mozjpeg encoding
                 mozjCMD = self.MozJpegPath() + self.mozjParams + " -outfile \"" + imgOutput + ".jpg\" \"" + imageInput + "\""
                 commands.append(mozjCMD)
 
@@ -466,7 +481,7 @@ class megapixel(QtWidgets.QMainWindow):
         for i, returncode in enumerate(pool.imap(partial(call, shell=True), commands)):  # Multi Threaded Encoding
             self.progressBar.setValue(self.progressBar.value() + 1 )  # Increases Progressbar Progress
 
-        self.showDialog()  # Message Box Finished Encoding
+        self.showDialog("Encoding Finished.")  # Message Box Finished Encoding
         self.progressBar.setValue(0)  # Resets the Progressbar
 
 
