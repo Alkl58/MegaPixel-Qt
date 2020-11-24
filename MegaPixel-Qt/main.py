@@ -358,7 +358,7 @@ class megapixel(QtWidgets.QMainWindow):
     def SetWebpParams(self, custom):
         if self.checkBoxCustomSettings.isChecked() is False or custom is True:
             self.webpParams = " -preset " + self.comboBoxWebpPreset.currentText()
-            if self.checkBoxAvifLossless.isChecked() is False:
+            if self.checkBoxWebpLossless.isChecked() is False:
                 if self.checkBoxWebpPSNR.isChecked() is True:
                     self.webpParams += " -psnr " + str(self.spinBoxWebpPSNR.value())
                 if self.checkBoxWebpSize.isChecked() is True:
