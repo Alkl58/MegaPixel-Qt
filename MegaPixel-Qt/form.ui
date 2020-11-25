@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1605</width>
-    <height>853</height>
+    <width>1280</width>
+    <height>720</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -246,7 +246,7 @@
          <layout class="QHBoxLayout" name="horizontalLayout_6">
           <item>
            <widget class="QWidget" name="widget" native="true">
-            <layout class="QVBoxLayout" name="verticalLayout_5" stretch="1,0">
+            <layout class="QVBoxLayout" name="verticalLayout_5" stretch="1,1,0">
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_4">
                <item>
@@ -1101,6 +1101,19 @@
                 </widget>
                </item>
               </layout>
+             </item>
+             <item>
+              <spacer name="verticalSpacer">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
              </item>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,1">
