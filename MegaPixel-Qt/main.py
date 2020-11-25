@@ -1,4 +1,6 @@
+#!/usr/bin/env python3
 # This Python file uses the following encoding: utf-8
+
 
 from PyQt5 import QtWidgets, uic, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
@@ -31,8 +33,6 @@ class megapixel(QtWidgets.QMainWindow):
         super(megapixel, self).__init__()
         pth = os.path.join(os.path.dirname(__file__), "form.ui")  # Set path ui
         uic.loadUi(pth, self)  # Load the .ui file
-        self.setFixedWidth(800)  # Set Window Width
-        self.setFixedHeight(570)  # Set Window Height
         self.setWindowTitle("MegaPixel")  # Set Window Title
         self.pushButtonStart.clicked.connect(self.StartEncoding)
         self.pushButtonOpenSource.clicked.connect(self.OpenImageSource)
