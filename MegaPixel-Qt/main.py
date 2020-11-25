@@ -6,6 +6,7 @@ from multiprocessing.dummy import Pool
 from functools import partial
 from subprocess import call
 from os import path
+from pathlib import Path
 import os
 import sys
 import time
@@ -441,15 +442,15 @@ class megapixel(QtWidgets.QMainWindow):
         # Creates argument list
         for i in range(self.listWidgetQueue.count()):
             imageInput = self.listWidgetQueue.item(i).text()
-            if self.checkBoxBatchAddSubfolders.isChecked() is True:
+            if self.checkBoxBatchAddSubfolders.isChecked() is True and self.checkBoxBatchAdd.isChecked() is True:
                 # With Subfolders
                 tempFileName = os.path.basename(imageInput)
                 n = len(self.tempInput)
                 sub = imageInput[n:]
                 n = len(tempFileName)
                 sub = sub[:-n]
-                if path.exists(self.imageOutput + sub) == False:
-                    os.mkdir(self.imageOutput + sub)
+                if path.exists(self.imageOutput + sub) is False:
+                    (Path(self.imageOutput + sub)).mkdir(parents=True, exist_ok=True)
                 imgOutput = os.path.join(self.imageOutput + sub, os.path.splitext(os.path.basename(imageInput))[0])
             else:
                 # Without Subfolders
