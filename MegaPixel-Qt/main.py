@@ -93,16 +93,19 @@ class megapixel(QtWidgets.QMainWindow):
         else:
             # Batch add files with subfolders
             if self.checkBoxBatchAddSubfolders.isChecked() is True:
+                self.checkBoxBatchAdd.setChecked(True)
                 n = len(filepath)
                 for root, dirs, files in os.walk(filepath):
                     for file in files:
                         filepatha = os.path.join(root, file)
-                        if filepatha.endswith((".jpg", ".jpeg", ".png")):
+                        ext = filepatha.lower()
+                        if ext.endswith((".jpg", ".jpeg", ".png")):
                             self.listWidgetQueue.addItem(str(os.path.join(filepatha) + ";" + str(n)))
             else:
                 # Batch add files without subfolder
                 for filename in os.listdir(filepath):
-                    if filename.endswith((".jpg", ".jpeg", ".png")):
+                    ext = filename.lower()
+                    if ext.endswith((".jpg", ".jpeg", ".png")):
                         self.listWidgetQueue.addItem(os.path.join(filepath, filename))
 
 
@@ -288,16 +291,17 @@ class megapixel(QtWidgets.QMainWindow):
             imageInputBatch = str(QFileDialog.getExistingDirectory(self, "Select Input Directory"))
             if self.checkBoxBatchAddSubfolders.isChecked() is True:
                 n = len(imageInputBatch)
-
                 for root, dirs, files in os.walk(imageInputBatch):
                     for file in files:
                         filepath = root + os.sep + file
-                        if filepath.endswith((".jpg", ".jpeg", ".png")):
+                        ext = filepath.lower()
+                        if ext.endswith((".jpg", ".jpeg", ".png")):
                             self.listWidgetQueue.addItem(str(os.path.join(filepath) + ";" + str(n)))
             else:
                 # Batch without Subfolders
                 for filename in os.listdir(imageInputBatch):
-                    if filename.endswith((".jpg", ".jpeg", ".png")):
+                    ext = filename.lower()
+                    if ext.endswith((".jpg", ".jpeg", ".png")):
                         self.listWidgetQueue.addItem(str(os.path.join(imageInputBatch, filename)))
         else:
             # Add a single file
