@@ -1,6 +1,4 @@
-#!/usr/bin/env python3
 # This Python file uses the following encoding: utf-8
-
 
 from PyQt5 import QtWidgets, uic, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
@@ -33,6 +31,8 @@ class megapixel(QtWidgets.QMainWindow):
         super(megapixel, self).__init__()
         pth = os.path.join(os.path.dirname(__file__), "form.ui")  # Set path ui
         uic.loadUi(pth, self)  # Load the .ui file
+        self.setFixedWidth(800)  # Set Window Width
+        self.setFixedHeight(570)  # Set Window Height
         self.setWindowTitle("MegaPixel")  # Set Window Title
         self.pushButtonStart.clicked.connect(self.StartEncoding)
         self.pushButtonOpenSource.clicked.connect(self.OpenImageSource)
@@ -93,16 +93,16 @@ class megapixel(QtWidgets.QMainWindow):
         else:
             # Batch add files with subfolders
             if self.checkBoxBatchAddSubfolders.isChecked() is True:
-                self.tempInput = filepath
+                n = len(filepath)
                 for root, dirs, files in os.walk(filepath):
                     for file in files:
                         filepatha = os.path.join(root, file)
-                        if filepatha.endswith((".jpg", ".jpeg", "png")):
-                            self.listWidgetQueue.addItem(os.path.join(filepatha))
+                        if filepatha.endswith((".jpg", ".jpeg", ".png")):
+                            self.listWidgetQueue.addItem(str(os.path.join(filepatha) + ";" + str(n)))
             else:
                 # Batch add files without subfolder
                 for filename in os.listdir(filepath):
-                    if filename.endswith(".png") or filename.endswith(".jpg") or filename.endswith(".jpeg"):
+                    if filename.endswith((".jpg", ".jpeg", ".png")):
                         self.listWidgetQueue.addItem(os.path.join(filepath, filename))
 
 
@@ -287,16 +287,17 @@ class megapixel(QtWidgets.QMainWindow):
             # Batch Adding
             imageInputBatch = str(QFileDialog.getExistingDirectory(self, "Select Input Directory"))
             if self.checkBoxBatchAddSubfolders.isChecked() is True:
-                self.tempInput = imageInputBatch
+                n = len(imageInputBatch)
+
                 for root, dirs, files in os.walk(imageInputBatch):
                     for file in files:
                         filepath = root + os.sep + file
-                        if filepath.endswith((".jpg", ".jpeg", "png")):
-                            self.listWidgetQueue.addItem(str(os.path.join(filepath)))
+                        if filepath.endswith((".jpg", ".jpeg", ".png")):
+                            self.listWidgetQueue.addItem(str(os.path.join(filepath) + ";" + str(n)))
             else:
                 # Batch without Subfolders
                 for filename in os.listdir(imageInputBatch):
-                    if filename.endswith(".png") or filename.endswith(".jpg") or filename.endswith(".jpeg"):
+                    if filename.endswith((".jpg", ".jpeg", ".png")):
                         self.listWidgetQueue.addItem(str(os.path.join(imageInputBatch, filename)))
         else:
             # Add a single file
@@ -444,8 +445,10 @@ class megapixel(QtWidgets.QMainWindow):
             imageInput = self.listWidgetQueue.item(i).text()
             if self.checkBoxBatchAddSubfolders.isChecked() is True and self.checkBoxBatchAdd.isChecked() is True:
                 # With Subfolders
+                lengthSplit = imageInput.rsplit(';', 1)[1]      # 26
+                imageInput = imageInput.rsplit(';', 1)[0]       # PATH/TO/FILE
                 tempFileName = os.path.basename(imageInput)
-                n = len(self.tempInput)
+                n = int(lengthSplit)
                 sub = imageInput[n:]
                 n = len(tempFileName)
                 sub = sub[:-n]
