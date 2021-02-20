@@ -111,6 +111,10 @@ class megapixel(QtWidgets.QMainWindow):
                         self.checkBoxCustomSettings.setChecked(False)
                     else:
                         self.checkBoxCustomSettings.setChecked(True)
+                    if p['clearqueue'] == "False":
+                        self.checkBoxClearQueue.setChecked(False)
+                    else:
+                        self.checkBoxClearQueue.setChecked(True)
                     self.textEditCustomSettings.setPlainText(p['customString'])
                     self.spinBoxAvifMinQ.setValue(int(p['avifMinQ']))
                     self.spinBoxAvifMaxQ.setValue(int(p['avifMaxQ']))
@@ -187,6 +191,7 @@ class megapixel(QtWidgets.QMainWindow):
         saveData['settings'].append({
             'encoder': self.comboBoxEncoders.currentIndex(),
             'workers': self.spinBoxParallelWorkers.value(),
+            'clearqueue': self.checkBoxClearQueue.isChecked(),
             'custom': self.checkBoxCustomSettings.isChecked(),
             'customString': self.textEditCustomSettings.toPlainText(),
             'avifMinQ': self.spinBoxAvifMinQ.value(),
