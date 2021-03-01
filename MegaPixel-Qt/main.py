@@ -97,7 +97,7 @@ class megapixel(QtWidgets.QMainWindow):
             self.loadPresetStartup()
         
     def loadPresetStartup(self):
-        for file_name in glob.iglob('Preset/*.json', recursive=True):
+        for file_name in glob.iglob(os.path.join('Preset', '*.json'), recursive=True):
             self.comboBoxPreset.addItem(os.path.splitext(os.path.basename(file_name))[0])
 
     def loadPreset(self):
@@ -107,18 +107,18 @@ class megapixel(QtWidgets.QMainWindow):
                 for p in data['settings']:
                     self.comboBoxEncoders.setCurrentIndex(p['encoder'])
                     self.spinBoxParallelWorkers.setValue(p['workers'])
-                    if p['custom'] == "False":
+                    if str(p['custom']) == "False":
                         self.checkBoxCustomSettings.setChecked(False)
                     else:
                         self.checkBoxCustomSettings.setChecked(True)
-                    if p['clearqueue'] == "False":
+                    if str(p['clearqueue']) == "False":
                         self.checkBoxClearQueue.setChecked(False)
                     else:
                         self.checkBoxClearQueue.setChecked(True)
                     self.textEditCustomSettings.setPlainText(p['customString'])
                     self.spinBoxAvifMinQ.setValue(int(p['avifMinQ']))
                     self.spinBoxAvifMaxQ.setValue(int(p['avifMaxQ']))
-                    if p['avifLossless'] == "False":
+                    if str(p['avifLossless']) == "False":
                         self.checkBoxAvifLossless.setChecked(False)
                     else:
                         self.checkBoxAvifLossless.setChecked(True)
@@ -129,19 +129,19 @@ class megapixel(QtWidgets.QMainWindow):
                     self.spinBoxAvifTileCols.setValue(int(p['avifCols']))
                     self.spinBoxAvifThreads.setValue(int(p['avifThreads']))
                     self.spinBoxAvifSpeed.setValue(int(p['avifSpeed']))
-                    if p['webpQActive'] == "False":
+                    if str(p['webpQActive']) == "False":
                         self.checkBoxWebpQuality.setChecked(False)
                     else:
                         self.checkBoxWebpQuality.setChecked(True)
-                    if p['webpSizeActive'] == "False":
+                    if str(p['webpSizeActive']) == "False":
                         self.checkBoxWebpSize.setChecked(False)
                     else:
                         self.checkBoxWebpSize.setChecked(True)
-                    if p['webpPSNRActive'] == "False":
+                    if str(p['webpPSNRActive']) == "False":
                         self.checkBoxWebpPSNR.setChecked(False)
                     else:
                         self.checkBoxWebpPSNR.setChecked(True)
-                    if p['webpLosslessActive'] == "False":
+                    if str(p['webpLosslessActive']) == "False":
                         self.checkBoxWebpLossless.setChecked(False)
                     else:
                         self.checkBoxWebpLossless.setChecked(True)
@@ -151,7 +151,7 @@ class megapixel(QtWidgets.QMainWindow):
                     self.comboBoxWebpLossless.setCurrentIndex(p['webpLossless'])
                     self.comboBoxWebpPreset.setCurrentIndex(p['webpPreset'])
                     self.spinBoxWebNoiseShaping.setValue(int(p['webpNoiseShaping']))
-                    if p['webpMT'] == "False":
+                    if str(p['webpMT']) == "False":
                         self.checkBoxWebpMultiThreading.setChecked(False)
                     else:
                         self.checkBoxWebpMultiThreading.setChecked(True)
@@ -159,27 +159,30 @@ class megapixel(QtWidgets.QMainWindow):
                     self.spinBoxWebFilterStrength.setValue(int(p['webpFilterStrength']))
                     self.spinBoxWebpSegments.setValue(int(p['webpSegments']))
                     self.spinBoxWebpFilterSharpness.setValue(int(p['webpFilterSharpness']))
-                    if p['jpegxlEncode'] == "False":
+                    if str(p['jpegxlEncode']) == "False":
                         self.checkBoxJpegXlEncode.setChecked(False)
                     else:
                         self.checkBoxJpegXlEncode.setChecked(True)
-                    if p['jpegxlDecode'] == "False":
+                    if str(p['jpegxlDecode']) == "False":
                         self.checkBoxJpegXlDecode.setChecked(False)
                     else:
                         self.checkBoxJpegXlDecode.setChecked(True)
-                    if p['jpegxlEncodeQActive'] == "False":
+                    if str(p['jpegxlEncodeQActive']) == "False":
                         self.checkBoxJpegXlQ.setChecked(False)
                     else:
                         self.checkBoxJpegXlQ.setChecked(True)
-                    if p['jpegxlEncodeSizeActive'] == "False":
+                    if str(p['jpegxlEncodeSizeActive']) == "False":
                         self.checkBoxJpegXlSize.setChecked(False)
                     else:
                         self.checkBoxJpegXlSize.setChecked(True)
+                    if str(p['jpegxlDecodeSjpeg']) == "False":
+                        self.checkBoxJpegXlDecodesjpeg.setChecked(False)
+                    else:
+                        self.checkBoxJpegXlDecodesjpeg.setChecked(True)
                     self.spinBoxJpegXlQ.setValue(int(p['jpegxlEncodeQ']))
                     self.spinBoxJpegXlSize.setValue(int(p['jpegxlEncodeSize']))
                     self.comboBoxJpegXlSpeed.setCurrentIndex(p['jpegxlEncodeSpeed'])
                     self.comboBoxJpegXlDecodeFormat.setCurrentIndex(p['jpegxlDecodeFormat'])
-                    self.checkBoxJpegXlDecodesjpeg.setCurrentIndex(p['jpegxlDecodeSjpeg'])
                     self.spinBoxJpegXlDecodeQ.setValue(int(p['jpegxlDecodeQ']))
                     self.spinBoxMozjpegQ.setValue(int(p['mozjpegQ']))
                     self.comboBoxMozjpegTune.setCurrentIndex(p['mozjpegTune'])
@@ -234,7 +237,7 @@ class megapixel(QtWidgets.QMainWindow):
         })
         if not os.path.exists('Preset'):
             os.makedirs('Preset')
-        with open('Preset\\' + self.lineEditPresetName.text() + ".json", 'w') as outfile:
+        with open(os.path.join('Preset', self.lineEditPresetName.text() + ".json"), 'w') as outfile:
             json.dump(saveData, outfile)
         self.comboBoxPreset.clear()
         self.loadPresetStartup()
