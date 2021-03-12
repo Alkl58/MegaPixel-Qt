@@ -1,27 +1,30 @@
 # This Python file uses the following encoding: utf-8
 
+import os
+import sys
+import time
+import subprocess
+import platform
+import psutil
+import json
+import glob
+
 from PyQt5 import QtWidgets, uic, QtCore
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
+from PyQt5.QtCore import QThread
 from multiprocessing.dummy import Pool
 from functools import partial
 from subprocess import call
 from os import path
 from pathlib import Path
-import os
-import sys
-import time
-import subprocess
-import asyncio
-import platform
-import psutil 
-import json
-import glob
+
+import worker
 
 
 class megapixel(QtWidgets.QMainWindow):
 
-    imageOutput = None
-    outputSet = False
+    image_output = None
+    output_set = False
     tempInput = None
     avifParams = None
     webpParams = None
@@ -32,14 +35,14 @@ class megapixel(QtWidgets.QMainWindow):
     def __init__(self):
 
         super(megapixel, self).__init__()
-        pth = os.path.join(os.path.dirname(__file__), "form.ui")  # Set path ui
+        pth = os.path.join(os.path.dirname(__file__), "interface", "form.ui")  # Set path ui
         uic.loadUi(pth, self)  # Load the .ui file
         self.setFixedWidth(800)  # Set Window Width
         self.setFixedHeight(570)  # Set Window Height
-        self.setWindowTitle("MegaPixel")  # Set Window Title
-        self.pushButtonStart.clicked.connect(self.StartEncoding)
-        self.pushButtonOpenSource.clicked.connect(self.OpenImageSource)
-        self.pushButtonSaveTo.clicked.connect(self.SetDestination)
+        self.setWindowTitle("MegaPixel-Qt")  # Set Window Title
+        self.pushButtonStart.clicked.connect(self.start_encoding)
+        self.pushButtonOpenSource.clicked.connect(self.open_image_source)
+        self.pushButtonSaveTo.clicked.connect(self.set_destination)
         self.pushButtonClearQueue.clicked.connect(self.ClearQueue)
         self.pushButtonRemoveQueue.clicked.connect(self.RemoveFromQueue)
         self.comboBoxEncoders.currentIndexChanged.connect(self.ToggleUiElems)
@@ -81,104 +84,66 @@ class megapixel(QtWidgets.QMainWindow):
         types.extend(self.listWidgetQueue.mimeTypes())
         self.listWidgetQueue.mimeTypes  = lambda: types
 
-        self.loadPresetStartup()
-        self.pushButtonLoadPreset.clicked.connect(self.loadPreset)
-        self.pushButtonDeletePreset.clicked.connect(self.deletePreset)
+        self.load_preset_startup()
+        self.pushButtonLoadPreset.clicked.connect(self.load_preset)
+        self.pushButtonDeletePreset.clicked.connect(self.delete_preset)
 
         # Show the GUI
-        self.show()  
+        self.show()
 
     #  ═══════════════════════════════════════ UI Logic ═══════════════════════════════════════
 
-    def deletePreset(self):
+    def delete_preset(self):
         if os.path.isfile(os.path.join('Preset', self.comboBoxPreset.currentText() + '.json')):
             os.remove(os.path.join('Preset', self.comboBoxPreset.currentText() + '.json'))
             self.comboBoxPreset.clear()
-            self.loadPresetStartup()
+            self.load_preset_startup()
         
-    def loadPresetStartup(self):
+    def load_preset_startup(self):
         for file_name in glob.iglob(os.path.join('Preset', '*.json'), recursive=True):
             self.comboBoxPreset.addItem(os.path.splitext(os.path.basename(file_name))[0])
 
-    def loadPreset(self):
+    def load_preset(self):
         if os.path.isfile(os.path.join('Preset', self.comboBoxPreset.currentText() + '.json')):
             with open(os.path.join('Preset', self.comboBoxPreset.currentText() + '.json')) as json_file:
                 data = json.load(json_file)
                 for p in data['settings']:
                     self.comboBoxEncoders.setCurrentIndex(p['encoder'])
                     self.spinBoxParallelWorkers.setValue(p['workers'])
-                    if str(p['custom']) == "False":
-                        self.checkBoxCustomSettings.setChecked(False)
-                    else:
-                        self.checkBoxCustomSettings.setChecked(True)
-                    if str(p['clearqueue']) == "False":
-                        self.checkBoxClearQueue.setChecked(False)
-                    else:
-                        self.checkBoxClearQueue.setChecked(True)
+                    self.checkBoxCustomSettings.setChecked(p['custom'])
+                    self.checkBoxClearQueue.setChecked(p['clearqueue'])
                     self.textEditCustomSettings.setPlainText(p['customString'])
-                    self.spinBoxAvifMinQ.setValue(int(p['avifMinQ']))
-                    self.spinBoxAvifMaxQ.setValue(int(p['avifMaxQ']))
-                    if str(p['avifLossless']) == "False":
-                        self.checkBoxAvifLossless.setChecked(False)
-                    else:
-                        self.checkBoxAvifLossless.setChecked(True)
+                    self.spinBoxAvifMinQ.setValue(p['avifMinQ'])
+                    self.spinBoxAvifMaxQ.setValue(p['avifMaxQ'])
+                    self.checkBoxAvifLossless.setChecked(p['avifLossless'])
                     self.comboBoxAvifDepth.setCurrentIndex(p['avifDepth'])
                     self.comboBoxAvifColorFormat.setCurrentIndex(p['avifFmt'])
                     self.comboBoxAvifRange.setCurrentIndex(p['avifRange'])
-                    self.spinBoxAvifTileRows.setValue(int(p['avifRows']))
-                    self.spinBoxAvifTileCols.setValue(int(p['avifCols']))
-                    self.spinBoxAvifThreads.setValue(int(p['avifThreads']))
-                    self.spinBoxAvifSpeed.setValue(int(p['avifSpeed']))
-                    if str(p['webpQActive']) == "False":
-                        self.checkBoxWebpQuality.setChecked(False)
-                    else:
-                        self.checkBoxWebpQuality.setChecked(True)
-                    if str(p['webpSizeActive']) == "False":
-                        self.checkBoxWebpSize.setChecked(False)
-                    else:
-                        self.checkBoxWebpSize.setChecked(True)
-                    if str(p['webpPSNRActive']) == "False":
-                        self.checkBoxWebpPSNR.setChecked(False)
-                    else:
-                        self.checkBoxWebpPSNR.setChecked(True)
-                    if str(p['webpLosslessActive']) == "False":
-                        self.checkBoxWebpLossless.setChecked(False)
-                    else:
-                        self.checkBoxWebpLossless.setChecked(True)
-                    self.spinBoxWebpQ.setValue(int(p['webpQ']))
-                    self.spinBoxWebpSize.setValue(int(p['webpSize']))
-                    self.spinBoxWebpPSNR.setValue(int(p['webpPSNR']))
+                    self.spinBoxAvifTileRows.setValue(p['avifRows'])
+                    self.spinBoxAvifTileCols.setValue(p['avifCols'])
+                    self.spinBoxAvifThreads.setValue(p['avifThreads'])
+                    self.spinBoxAvifSpeed.setValue(p['avifSpeed'])
+                    self.checkBoxWebpQuality.setChecked(p['webpQActive'])
+                    self.checkBoxWebpSize.setChecked(p['webpSizeActive'])
+                    self.checkBoxWebpPSNR.setChecked(p['webpPSNRActive'])
+                    self.checkBoxWebpLossless.setChecked(p['webpLosslessActive'])
+                    self.spinBoxWebpQ.setValue(p['webpQ'])
+                    self.spinBoxWebpSize.setValue(p['webpSize'])
+                    self.spinBoxWebpPSNR.setValue(p['webpPSNR'])
                     self.comboBoxWebpLossless.setCurrentIndex(p['webpLossless'])
                     self.comboBoxWebpPreset.setCurrentIndex(p['webpPreset'])
-                    self.spinBoxWebNoiseShaping.setValue(int(p['webpNoiseShaping']))
-                    if str(p['webpMT']) == "False":
-                        self.checkBoxWebpMultiThreading.setChecked(False)
-                    else:
-                        self.checkBoxWebpMultiThreading.setChecked(True)
+                    self.spinBoxWebNoiseShaping.setValue(p['webpNoiseShaping'])
+                    self.checkBoxWebpMultiThreading.setChecked(p['webpMT'])
                     self.comboBoxWebpSpeed.setCurrentIndex(p['webpSpeed'])
-                    self.spinBoxWebFilterStrength.setValue(int(p['webpFilterStrength']))
-                    self.spinBoxWebpSegments.setValue(int(p['webpSegments']))
-                    self.spinBoxWebpFilterSharpness.setValue(int(p['webpFilterSharpness']))
-                    if str(p['jpegxlEncode']) == "False":
-                        self.checkBoxJpegXlEncode.setChecked(False)
-                    else:
-                        self.checkBoxJpegXlEncode.setChecked(True)
-                    if str(p['jpegxlDecode']) == "False":
-                        self.checkBoxJpegXlDecode.setChecked(False)
-                    else:
-                        self.checkBoxJpegXlDecode.setChecked(True)
-                    if str(p['jpegxlEncodeQActive']) == "False":
-                        self.checkBoxJpegXlQ.setChecked(False)
-                    else:
-                        self.checkBoxJpegXlQ.setChecked(True)
-                    if str(p['jpegxlEncodeSizeActive']) == "False":
-                        self.checkBoxJpegXlSize.setChecked(False)
-                    else:
-                        self.checkBoxJpegXlSize.setChecked(True)
-                    if str(p['jpegxlDecodeSjpeg']) == "False":
-                        self.checkBoxJpegXlDecodesjpeg.setChecked(False)
-                    else:
-                        self.checkBoxJpegXlDecodesjpeg.setChecked(True)
+                    self.spinBoxWebFilterStrength.setValue(p['webpFilterStrength'])
+                    self.spinBoxWebpSegments.setValue(p['webpSegments'])
+                    self.spinBoxWebpFilterSharpness.setValue(p['webpFilterSharpness'])
+                    self.checkBoxJpegXlEncode.setChecked(p['jpegxlEncode'])
+                    self.checkBoxJpegXlDecode.setChecked(p['jpegxlDecode'])
+                    self.checkBoxJpegXlDecode.setChecked(p['jpegxlDecode'])
+                    self.checkBoxJpegXlQ.setChecked(p['jpegxlEncodeQActive'])
+                    self.checkBoxJpegXlSize.setChecked(p['jpegxlEncodeSizeActive'])
+                    self.checkBoxJpegXlDecodesjpeg.setChecked(p['jpegxlDecodeSjpeg'])
                     self.spinBoxJpegXlQ.setValue(int(p['jpegxlEncodeQ']))
                     self.spinBoxJpegXlSize.setValue(int(p['jpegxlEncodeSize']))
                     self.comboBoxJpegXlSpeed.setCurrentIndex(p['jpegxlEncodeSpeed'])
@@ -187,11 +152,10 @@ class megapixel(QtWidgets.QMainWindow):
                     self.spinBoxMozjpegQ.setValue(int(p['mozjpegQ']))
                     self.comboBoxMozjpegTune.setCurrentIndex(p['mozjpegTune'])
 
-
     def savePreset(self):
-        saveData = {}
-        saveData['settings'] = []
-        saveData['settings'].append({
+        save_data = {}
+        save_data['settings'] = []
+        save_data['settings'].append({
             'encoder': self.comboBoxEncoders.currentIndex(),
             'workers': self.spinBoxParallelWorkers.value(),
             'clearqueue': self.checkBoxClearQueue.isChecked(),
@@ -238,10 +202,9 @@ class megapixel(QtWidgets.QMainWindow):
         if not os.path.exists('Preset'):
             os.makedirs('Preset')
         with open(os.path.join('Preset', self.lineEditPresetName.text() + ".json"), 'w') as outfile:
-            json.dump(saveData, outfile)
+            json.dump(save_data, outfile)
         self.comboBoxPreset.clear()
         self.loadPresetStartup()
-
 
     def eventFilter(self, source, event):
         # Drag & Drop Stuff
@@ -261,7 +224,7 @@ class megapixel(QtWidgets.QMainWindow):
             if self.checkBoxBatchAddSubfolders.isChecked() is True:
                 self.checkBoxBatchAdd.setChecked(True)
                 n = len(filepath)
-                for root, dirs, files in os.walk(filepath):
+                for root, _, files in os.walk(filepath):
                     for file in files:
                         filepatha = os.path.join(root, file)
                         ext = filepatha.lower()
@@ -349,9 +312,9 @@ class megapixel(QtWidgets.QMainWindow):
                     self.textEditCustomSettings.setText(self.djxlParams)
                 self.groupBoxJpegXl.setEnabled(False)
             elif self.comboBoxEncoders.currentIndex() == 3:            # mozjpeg
-                 self.SetMozJpegParams(True)
-                 self.textEditCustomSettings.setText(self.mozjParams)
-                 self.groupBoxMozjpeg.setEnabled(False)
+                self.SetMozJpegParams(True)
+                self.textEditCustomSettings.setText(self.mozjParams)
+                self.groupBoxMozjpeg.setEnabled(False)
         else: # CheckBox Custom Settings not checked
             self.textEditCustomSettings.setEnabled(False)
             if self.comboBoxEncoders.currentIndex() == 0:
@@ -449,13 +412,13 @@ class megapixel(QtWidgets.QMainWindow):
             self.spinBoxJpegXlQ.setEnabled(False)
             self.spinBoxJpegXlSize.setEnabled(True)
 
-    def OpenImageSource(self):
+    def open_image_source(self):
         if self.checkBoxBatchAdd.isChecked() is True:
             # Batch Adding
-            imageInputBatch = str(QFileDialog.getExistingDirectory(self, "Select Input Directory"))
+            image_input_batch = str(QFileDialog.getExistingDirectory(self, "Select Input Directory"))
             if self.checkBoxBatchAddSubfolders.isChecked() is True:
-                n = len(imageInputBatch)
-                for root, dirs, files in os.walk(imageInputBatch):
+                n = len(image_input_batch)
+                for root, _, files in os.walk(image_input_batch):
                     for file in files:
                         filepath = root + os.sep + file
                         ext = filepath.lower()
@@ -463,20 +426,20 @@ class megapixel(QtWidgets.QMainWindow):
                             self.listWidgetQueue.addItem(str(os.path.join(filepath) + ";" + str(n)))
             else:
                 # Batch without Subfolders
-                for filename in os.listdir(imageInputBatch):
+                for filename in os.listdir(image_input_batch):
                     ext = filename.lower()
                     if ext.endswith((".jpg", ".jpeg", ".png")):
-                        self.listWidgetQueue.addItem(str(os.path.join(imageInputBatch, filename)))
+                        self.listWidgetQueue.addItem(str(os.path.join(image_input_batch, filename)))
         else:
             # Add a single file
             fileName, _ = QFileDialog.getOpenFileName(self, "Select Image...", "", "All Files (*)")
             self.listWidgetQueue.addItem(fileName) # Adds the selected input file to the queue
 
-    def SetDestination(self):
+    def set_destination(self):
         # Set output dir
-        self.imageOutput = str(QFileDialog.getExistingDirectory(self, "Select Output Directory"))
-        self.labelOutput.setText("Output: " + self.imageOutput)
-        self.outputSet = True
+        self.image_output = str(QFileDialog.getExistingDirectory(self, "Select Output Directory"))
+        self.labelOutput.setText("Output: " + self.image_output)
+        self.output_set = True
 
     def ClearQueue(self):
         # Clears the Queue List
@@ -488,7 +451,6 @@ class megapixel(QtWidgets.QMainWindow):
         if not listItems: return
         for item in listItems:
             self.listWidgetQueue.takeItem(self.listWidgetQueue.row(item))
-
 
     def showDialog(self, text):
         # Dialog to tell that encoding is finished
@@ -599,70 +561,88 @@ class megapixel(QtWidgets.QMainWindow):
 
     #  ══════════════════════════════════════════════ Main ══════════════════════════════════════════════
 
-    def StartEncoding(self):
+    def start_encoding(self):
     # Main Encoding function
-        if self.outputSet == True:
+        if self.output_set is True:
             self.SetAvifParams(False)
             self.SetWebpParams(False)
             self.SetJpegXlParams(False)
             self.SetMozJpegParams(False)
-            asyncio.run(self.Encode())
+            self.encode()
         else:
             self.showDialog("Output Folder not set!")
 
-
-    async def Encode(self):
-        commands = [ ]
-        # Creates argument list
-        for i in range(self.listWidgetQueue.count()):
-            imageInput = self.listWidgetQueue.item(i).text()
-            if self.checkBoxBatchAddSubfolders.isChecked() is True and self.checkBoxBatchAdd.isChecked() is True:
-                # With Subfolders
-                lengthSplit = imageInput.rsplit(';', 1)[1]      # 26
-                imageInput = imageInput.rsplit(';', 1)[0]       # PATH/TO/FILE
-                tempFileName = os.path.basename(imageInput)
-                n = int(lengthSplit)
-                sub = imageInput[n:]
-                n = len(tempFileName)
-                sub = sub[:-n]
-                if path.exists(self.imageOutput + sub) is False:
-                    (Path(self.imageOutput + sub)).mkdir(parents=True, exist_ok=True)
-                imgOutput = os.path.join(self.imageOutput + sub, os.path.splitext(os.path.basename(imageInput))[0])
-            else:
-                # Without Subfolders
-                imgOutput = os.path.join(self.imageOutput, os.path.splitext(os.path.basename(imageInput))[0])
-
-            if self.comboBoxEncoders.currentIndex() == 0:
-                # avifencoding
-                avifCMD = self.AvifPath() + " " + self.avifParams + " \"" + imageInput + "\" " + " \"" + imgOutput + ".avif\""
-                commands.append(avifCMD)
-            elif self.comboBoxEncoders.currentIndex() == 1:
-                # webp encoding
-                webpCMD = self.WebPPath() + self.webpParams + " \"" + imageInput + "\" " + " -o \"" + imgOutput + ".webp\""
-                commands.append(webpCMD)
-            elif self.comboBoxEncoders.currentIndex() == 2:
-                # jpegxl encoding / decoding
-                if self.checkBoxJpegXlEncode.isChecked() is True:
-                    cjxlCMD = self.EJpegXlPath() + " \"" + imageInput + "\" \"" + imgOutput + ".jpg\"" + self.cjxlParams
-                    commands.append(cjxlCMD)
-                else:
-                    djxlCMD = self.DJpegXlPath() + " \"" + imageInput + "\" \"" + imgOutput + "." + self.comboBoxJpegXlDecodeFormat.currentText() + "\" " + self.djxlParams
-                    commands.append(djxlCMD)
-            elif self.comboBoxEncoders.currentIndex() == 3:
-                # mozjpeg encoding
-                mozjCMD = self.MozJpegPath() + self.mozjParams + " -outfile \"" + imgOutput + ".jpg\" \"" + imageInput + "\""
-                commands.append(mozjCMD)
-
-        self.progressBar.setMaximum(len(commands))  # Sets the Max Value of Progressbar
-        pool = Pool(self.spinBoxParallelWorkers.value())  # Sets the amount of workers
-        for i, returncode in enumerate(pool.imap(partial(call, shell=True), commands)):  # Multi Threaded Encoding
-            self.progressBar.setValue(self.progressBar.value() + 1 )  # Increases Progressbar Progress
-
+    def worker_finished(self):
         self.showDialog("Encoding Finished.")  # Message Box Finished Encoding
         self.progressBar.setValue(0)  # Resets the Progressbar
 
         if self.checkBoxClearQueue.isChecked() is True:
             self.ClearQueue()
+
+    def report_progress(self, signal):
+        self.progressBar.setValue(signal)
+
+
+    def encode(self):
+        commands = [ ]
+        # Creates argument list
+        for i in range(self.listWidgetQueue.count()):
+            image_input = self.listWidgetQueue.item(i).text()
+            if self.checkBoxBatchAddSubfolders.isChecked() is True and self.checkBoxBatchAdd.isChecked() is True:
+                # With Subfolders
+                lengthSplit = image_input.rsplit(';', 1)[1]      # 26
+                image_input = image_input.rsplit(';', 1)[0]       # PATH/TO/FILE
+                temp_file_name = os.path.basename(image_input)
+                n = int(lengthSplit)
+                sub = image_input[n:]
+                n = len(temp_file_name)
+                sub = sub[:-n]
+                if path.exists(self.image_output + sub) is False:
+                    (Path(self.image_output + sub)).mkdir(parents=True, exist_ok=True)
+                imgOutput = os.path.join(self.image_output + sub, os.path.splitext(os.path.basename(image_input))[0])
+            else:
+                # Without Subfolders
+                imgOutput = os.path.join(self.image_output, os.path.splitext(os.path.basename(image_input))[0])
+
+            if self.comboBoxEncoders.currentIndex() == 0:
+                # avifencoding
+                avifCMD = self.AvifPath() + " " + self.avifParams + " \"" + image_input + "\" " + " \"" + imgOutput + ".avif\""
+                commands.append(avifCMD)
+            elif self.comboBoxEncoders.currentIndex() == 1:
+                # webp encoding
+                webpCMD = self.WebPPath() + self.webpParams + " \"" + image_input + "\" " + " -o \"" + imgOutput + ".webp\""
+                commands.append(webpCMD)
+            elif self.comboBoxEncoders.currentIndex() == 2:
+                # jpegxl encoding / decoding
+                if self.checkBoxJpegXlEncode.isChecked() is True:
+                    cjxlCMD = self.EJpegXlPath() + " \"" + image_input + "\" \"" + imgOutput + ".jpg\"" + self.cjxlParams
+                    commands.append(cjxlCMD)
+                else:
+                    djxlCMD = self.DJpegXlPath() + " \"" + image_input + "\" \"" + imgOutput + "." + self.comboBoxJpegXlDecodeFormat.currentText() + "\" " + self.djxlParams
+                    commands.append(djxlCMD)
+            elif self.comboBoxEncoders.currentIndex() == 3:
+                # mozjpeg encoding
+                mozjCMD = self.MozJpegPath() + self.mozjParams + " -outfile \"" + imgOutput + ".jpg\" \"" + image_input + "\""
+                commands.append(mozjCMD)
+
+        self.progressBar.setMaximum(len(commands))  # Sets the Max Value of Progressbar
+
+        pool_size = self.spinBoxParallelWorkers.value()
+        # Create a QThread object
+        self.thread = QThread()
+        # Create a worker object
+        self.worker = worker.Worker()
+        # Move worker to the thread
+        self.worker.moveToThread(self.thread)
+        # Connect signals and slots
+        self.thread.started.connect(partial(self.worker.run, pool_size, commands))
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker_finished)
+        self.worker.progress.connect(self.report_progress)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+        # Start the thread
+        self.thread.start()
 
 
 if __name__ == "__main__":
