@@ -432,8 +432,13 @@ class megapixel(QtWidgets.QMainWindow):
                         self.listWidgetQueue.addItem(str(os.path.join(image_input_batch, filename)))
         else:
             # Add a single file
-            fileName, _ = QFileDialog.getOpenFileName(self, "Select Image...", "", "All Files (*)")
-            self.listWidgetQueue.addItem(fileName) # Adds the selected input file to the queue
+            file_name = QFileDialog()
+            file_name.setFileMode(QFileDialog.ExistingFiles)
+            names, _ = file_name.getOpenFileNames(self, "Select Image", "", "All Files (*)")
+            if names:
+                for file in names:
+                    # Adds the selected input file to the queue
+                    self.listWidgetQueue.addItem(file)
 
     def set_destination(self):
         # Set output dir
