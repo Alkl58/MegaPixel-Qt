@@ -527,35 +527,35 @@ class megapixel(QtWidgets.QMainWindow):
     # Sets the avif executable path
     def AvifPath(self):
         if platform.system() == "Windows":
-            return os.path.join(os.path.dirname(__file__), "Encoders", "avif", "avifenc.exe") + " "
+            return " \"" + os.path.join(os.path.dirname(__file__), "Encoders", "avif", "avifenc.exe") + "\" "
         else:
             return "avifenc "
 
     # Sets the jpegxl encoder executable path
     def EJpegXlPath(self):
         if platform.system() == "Windows":
-            return os.path.join(os.path.dirname(__file__), "Encoders", "jpegxl", "cjpegxl.exe") + " "
+            return " \"" + os.path.join(os.path.dirname(__file__), "Encoders", "jpegxl", "cjpegxl.exe") + "\" "
         else:
             return "cjxl "
 
     # Sets the jpegxl decoder executable path
     def DJpegXlPath(self):
         if platform.system() == "Windows":
-            return os.path.join(os.path.dirname(__file__), "Encoders", "jpegxl", "djpegxl.exe") + " "
+            return " \"" + os.path.join(os.path.dirname(__file__), "Encoders", "jpegxl", "djpegxl.exe") + "\" "
         else:
             return "djxl "
 
     # Sets the mozjpeg executable path
     def MozJpegPath(self):
         if platform.system() == "Windows":
-            return os.path.join(os.path.dirname(__file__), "Encoders", "mozjpeg", "cjpeg.exe") + " "
+            return " \"" + os.path.join(os.path.dirname(__file__), "Encoders", "mozjpeg", "cjpeg.exe") + "\" "
         else:
             return "cjpeg "
 
     # Sets the webp executable path
     def WebPPath(self):
         if platform.system() == "Windows":
-            return os.path.join(os.path.dirname(__file__), "Encoders", "webp", "cwebp.exe") + " "
+            return  " \"" + os.path.join(os.path.dirname(__file__), "Encoders", "webp", "cwebp.exe") + "\" "
         else:
             return "cwebp "
 
@@ -615,7 +615,7 @@ class megapixel(QtWidgets.QMainWindow):
             elif self.comboBoxEncoders.currentIndex() == 2:
                 # jpegxl encoding / decoding
                 if self.checkBoxJpegXlEncode.isChecked() is True:
-                    cjxlCMD = self.EJpegXlPath() + " \"" + image_input + "\" \"" + imgOutput + ".jpg\"" + self.cjxlParams
+                    cjxlCMD = self.EJpegXlPath() + " \"" + image_input + "\" \"" + imgOutput + ".jxl\"" + self.cjxlParams
                     commands.append(cjxlCMD)
                 else:
                     djxlCMD = self.DJpegXlPath() + " \"" + image_input + "\" \"" + imgOutput + "." + self.comboBoxJpegXlDecodeFormat.currentText() + "\" " + self.djxlParams
